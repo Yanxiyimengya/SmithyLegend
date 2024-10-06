@@ -1,0 +1,177 @@
+[gd_scene load_steps=7 format=3 uid="uid://dk02p7itik21n"]
+
+[ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="1_m7cqe"]
+[ext_resource type="Texture2D" uid="uid://bvyoddievw80l" path="res://Graphics/mine.png" id="2_tuut6"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bavou"]
+resource_local_to_scene = true
+shader = ExtResource("1_m7cqe")
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 39.0
+shader_parameter/inset = 0.0
+
+[sub_resource type="GDScript" id="GDScript_etv8o"]
+script/source = "extends Sprite2D;
+
+@onready var grid_container: GridContainer = $DragRect/GridContainer;
+@onready var audio_stream_player_2d: AudioStreamPlayer2D = $AudioStreamPlayer2D;
+@onready var drag_rect: Control = $DragRect;
+
+var item_list : Array[Sprite2D] = [];
+var x_rot : float = 0 : 
+	set(value) : 
+		self.material.set_shader_parameter(\"x_rot\", value);
+		x_rot = value;
+@export var item_texture : Texture2D = preload(\"res://Graphics/Item/Iron/raw_iron.png\");
+@export var item_type : String = \"\";
+var item_count : int = 0;
+
+func _ready() -> void:
+	for i : int in round(8) : 
+		var c : Control = Control.new();
+		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL;
+		c.size_flags_vertical= Control.SIZE_EXPAND_FILL;
+		grid_container.add_child(c);
+		var spr : Sprite2D = Sprite2D.new();
+		spr.texture = item_texture;
+		spr.visible = true;
+		c.add_child(spr);
+		item_list.append(spr);
+	reset_itemslot();
+
+
+const SOUND : Array[AudioStream] = [
+	preload(\"res://Audio/Sound/Equip_iron1.ogg\"),
+];
+func set_item_count(value : int) : 
+	if (item_count > -1 && item_count < item_list.size()) : 
+		item_count = value;
+		reset_itemslot();
+
+func append_item(count : int = 1) : 
+	var shader_material : ShaderMaterial = self.material;
+	x_rot = 39;
+	var tween : Tween = get_tree().create_tween().set_parallel(true);
+	tween.tween_property(self, \"x_rot\", 39+5, 0.05);
+	tween.tween_property(self, \"offset:y\", 7, 0.075);
+	tween.chain();
+	tween.tween_property(self, \"x_rot\", 39, 0.05);
+	tween.tween_property(self, \"offset:y\", 0, 0.075);
+	tween.chain();
+	
+	if (!audio_stream_player_2d.playing) : 
+		audio_stream_player_2d.play();
+	var audio_playback : AudioStreamPlayback = audio_stream_player_2d.get_stream_playback();
+	audio_playback.play_stream(SOUND[randi() % SOUND.size()]);
+	
+	if (item_count > -1 && (item_count+count) <= item_list.size()) : 
+		for i : int in range(item_count, min(8, item_count + count)) : 
+			var item : Sprite2D = item_list[i];
+			item.visible = true;
+			item.scale = Vector2.ZERO;
+			
+			tween = get_tree().create_tween();
+			tween.tween_property(item, \"scale\", Vector2.ONE, 0.2);
+			tween.tween_property(item, \"modulate:a\", 1.0, 0.1);
+		item_count += count;
+
+func remove_item() : 
+	if (item_count > 0 && item_count <= item_list.size()) : 
+		item_count -= 1;
+		var item : Sprite2D = item_list[item_count];
+		var tween : Tween = get_tree().create_tween();
+		tween.tween_property(item, \"scale\", Vector2.ZERO, 0.1);
+		tween.tween_property(item, \"modulate:a\", 0.0, 0.1);
+		await tween.finished;
+		reset_itemslot();
+
+func reset_itemslot() : 
+	var item : Sprite2D;
+	if (item_count > -1 && item_count <= item_list.size()) : 
+		for i : int in round(item_list.size()) : 
+			item = item_list[i];
+			item.visible = (i < item_count);
+			item.scale = Vector2.ONE;
+			item.modulate = Color.WHITE;
+"
+
+[sub_resource type="AudioStreamPolyphonic" id="AudioStreamPolyphonic_ypj62"]
+
+[sub_resource type="GDScript" id="GDScript_jlv61"]
+script/source = "extends Control;
+@onready var mine: Sprite2D = $\"..\";
+var dragging = false;
+
+func _ready() -> void:
+	DragManager.register_object(self);
+	DragManager.drag_endding.connect(func(success : bool) : 
+		if (dragging && !success) : 
+			var drop_item : Node2D = DragManager.create_drop_item(mine.item_type);
+			drop_item.global_position = get_global_mouse_position();
+			drop_item.item_type = mine.item_type;
+		dragging = false;
+	);
+
+func _dm_drag_data(as_position : Vector2) : 
+	if (mine.item_count > 0) : 
+		var spr : Sprite2D = Sprite2D.new();
+		spr.texture = mine.item_texture;
+		spr.scale = Vector2.ONE * 4;
+		DragManager.set_drag_preview(spr);
+		mine.remove_item();
+		dragging = true;
+		return [\"IngredientsDrag\", mine.item_type];
+	return null;
+
+func _dm_can_drag(as_position : Vector2, data : Variant) : 
+	if (Rect2(Vector2.ZERO, size).has_point(as_position)) : 
+		if (data && data is Array) : 
+			if (data[0] == \"IngredientsDrag\") : 
+				if (data[1] == mine.item_type) : 
+					return true;
+	return false;
+
+func _dm_drop_data(data : Variant) : 
+	if (data[0] == \"IngredientsDrag\") : 
+		mine.append_item();
+"
+
+[node name="Mine" type="Sprite2D"]
+material = SubResource("ShaderMaterial_bavou")
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_tuut6")
+script = SubResource("GDScript_etv8o")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = SubResource("AudioStreamPolyphonic_ypj62")
+
+[node name="DragRect" type="Control" parent="."]
+layout_mode = 3
+anchor_left = 0.081
+anchor_top = 0.233
+anchor_right = 0.905
+anchor_bottom = 1.071
+offset_left = -150.381
+offset_top = -187.375
+offset_right = -150.405
+offset_bottom = -187.625
+mouse_filter = 2
+script = SubResource("GDScript_jlv61")
+
+[node name="GridContainer" type="GridContainer" parent="DragRect"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.5
+offset_top = -111.5
+offset_right = -17.5
+offset_bottom = -83.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(6, 6)
+columns = 2

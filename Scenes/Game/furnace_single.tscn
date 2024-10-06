@@ -1,0 +1,262 @@
+[gd_scene load_steps=27 format=3 uid="uid://ciw3skvhqlyle"]
+
+[ext_resource type="Texture2D" uid="uid://byxhlcoi7l4fd" path="res://Graphics/BlockTexture/furnace_top.png" id="1_ixt0j"]
+[ext_resource type="Texture2D" uid="uid://ckw3x7s1ecys7" path="res://Graphics/BlockTexture/furnace_front.png" id="2_hft3p"]
+[ext_resource type="Texture2D" uid="uid://cxbmxitmhj42w" path="res://Graphics/ParticleEffect/generic.png" id="3_lojij"]
+[ext_resource type="Texture2D" uid="uid://b5t6872nuvc1y" path="res://Graphics/BlockTexture/furnace_side.png" id="3_p6igo"]
+[ext_resource type="Texture2D" uid="uid://857iegf356to" path="res://Graphics/ParticleEffect/flame.png" id="4_fahde"]
+
+[sub_resource type="GDScript" id="GDScript_b6ekb"]
+script/source = "extends MeshInstance3D;
+
+signal timeout;
+
+const FURNACE_FRONT = [preload(\"res://Graphics/BlockTexture/furnace_front.png\"),
+	preload(\"res://Graphics/BlockTexture/blast_furnace_front.png\")];
+const FURNACE_FRONT_ON = [preload(\"res://Graphics/BlockTexture/furnace_front_on.png\"),
+preload(\"res://Graphics/BlockTexture/blast_furnace_front_on.png\")];
+const FURNACE_SIDE = [preload(\"res://Graphics/BlockTexture/furnace_side.png\"),
+preload(\"res://Graphics/BlockTexture/blast_furnace_side.png\")];
+const FURNACE_TOP = [preload(\"res://Graphics/BlockTexture/furnace_top.png\"),
+preload(\"res://Graphics/BlockTexture/blast_furnace_top.png\")];
+
+@onready var top: MeshInstance3D = $Top;
+@onready var front : MeshInstance3D = $Side1;
+@onready var side: MeshInstance3D = $Side2;
+
+@onready var export_marked: Marker3D = $Side1/Marker3D;
+var on : bool = false;
+var item_type : String = \"\";
+var item_count : int = 0;
+var work_process : float = 0.0;
+var is_blastfurnace : bool = false;
+
+@onready var smoke_particles: GPUParticles3D = $Side1/Marker3D/SmokeParticles;
+@onready var fire_particles: GPUParticles3D = $Side1/Marker3D/FireParticles;
+@onready var audio_stream_player: AudioStreamPlayer = $AudioStreamPlayer;
+@onready var wrok_timer: Timer = $WrokTimer;
+const FURNACE_FIRE_SOUND : Array[AudioStream] = [
+	preload(\"res://Audio/Sound/Furnace_fire_crackle1.ogg\"),
+	preload(\"res://Audio/Sound/Furnace_fire_crackle2.ogg\"),
+	preload(\"res://Audio/Sound/Furnace_fire_crackle3.ogg\"),
+	preload(\"res://Audio/Sound/Furnace_fire_crackle4.ogg\"),
+	preload(\"res://Audio/Sound/Furnace_fire_crackle5.ogg\"),
+]
+
+func _ready() -> void:
+	top.mesh.material.albedo_texture = FURNACE_TOP[int(is_blastfurnace)];
+	front.mesh.material.albedo_texture = FURNACE_FRONT[int(is_blastfurnace)];
+	side.mesh.material.albedo_texture = FURNACE_SIDE[int(is_blastfurnace)];
+	if (is_blastfurnace) : 
+		export_marked.process_mode = Node.PROCESS_MODE_DISABLED;
+
+var playing : bool = false;
+func play_sound() : 
+	if (!audio_stream_player.playing) : 
+		audio_stream_player.play();
+	var playback : AudioStreamPlayback = audio_stream_player.get_stream_playback();
+	playback.play_stream(FURNACE_FIRE_SOUND[randi() % FURNACE_FIRE_SOUND.size()]);
+	if (playing) : 
+		await get_tree().create_timer(0.25).timeout;
+		play_sound();
+
+func set_on(value : bool, wt : String = \"\") : 
+	self.on = value;
+	if (value) : 
+		front.mesh.material.albedo_texture = FURNACE_FRONT_ON[int(is_blastfurnace)];
+		if (Global.item_dict.has(wt)) : 
+			item_type = wt;
+			if (wrok_timer.is_stopped()) : 
+				wrok_timer.start( Global.item_dict[wt][\"smelt_time\"] * (0.5 if is_blastfurnace else 1)  );
+		playing = true;
+		smoke_particles.emitting = true;
+		fire_particles.emitting = true;
+		play_sound();
+		var tween : Tween = get_tree().create_tween();
+		tween.tween_property(audio_stream_player, \"volume_db\", -80.0, 8.0).from(8.0);
+		await tween.finished;
+		playing = false;
+	else : 
+		smoke_particles.emitting = false;
+		fire_particles.emitting = false;
+		front.mesh.material.albedo_texture = FURNACE_FRONT[int(is_blastfurnace)];
+
+
+func _on_wrok_timer_timeout() -> void:
+	self.timeout.emit();
+	item_count -= 1;
+	if (item_count <= 0) : 
+		item_type = \"\";
+		set_on(false , \"\");
+	else : 
+		wrok_timer.start(Global.item_dict[item_type][\"smelt_time\"]);
+"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vd30v"]
+resource_local_to_scene = true
+albedo_texture = ExtResource("1_ixt0j")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ckt4x"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_vd30v")
+size = Vector2(1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_px05h"]
+resource_local_to_scene = true
+albedo_texture = ExtResource("2_hft3p")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ivigw"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_px05h")
+size = Vector2(1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w0li7"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("3_lojij")
+texture_filter = 0
+texture_repeat = false
+billboard_mode = 3
+particles_anim_h_frames = 7
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Gradient" id="Gradient_skwyd"]
+colors = PackedColorArray(0, 0, 0, 1, 0.087016, 0.0870161, 0.0870161, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_a1mca"]
+gradient = SubResource("Gradient_skwyd")
+width = 2
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_jgplw"]
+emission_shape_offset = Vector3(0, 0, 0.05)
+emission_shape = 3
+emission_box_extents = Vector3(0.35, 0, 0)
+direction = Vector3(0, 1, 0.2)
+spread = 15.0
+initial_velocity_max = 2.0
+gravity = Vector3(0, 1, 0)
+color_initial_ramp = SubResource("GradientTexture1D_a1mca")
+anim_speed_max = 1.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_1fb1k"]
+size = Vector2(0.25, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qsqh6"]
+transparency = 1
+shading_mode = 0
+albedo_texture = ExtResource("4_fahde")
+texture_filter = 0
+texture_repeat = false
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Gradient" id="Gradient_fqcuh"]
+colors = PackedColorArray(0, 0, 0, 1, 0.087016, 0.0870161, 0.0870161, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_pnw0r"]
+gradient = SubResource("Gradient_fqcuh")
+width = 2
+
+[sub_resource type="Curve" id="Curve_3al68"]
+_data = [Vector2(0.191099, 0.92967), 0.0, 0.0, 0, 0, Vector2(1, 0.542857), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_ystrl"]
+curve = SubResource("Curve_3al68")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_d7pe2"]
+emission_shape_offset = Vector3(0, 0, 0.05)
+emission_shape = 3
+emission_box_extents = Vector3(0.25, -0.1, 0)
+direction = Vector3(0, 1, 0)
+spread = 0.0
+gravity = Vector3(0, 0.1, 0)
+scale_curve = SubResource("CurveTexture_ystrl")
+color_initial_ramp = SubResource("GradientTexture1D_pnw0r")
+anim_speed_max = 1.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_hk1ja"]
+size = Vector2(0.25, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l0aid"]
+resource_local_to_scene = true
+albedo_texture = ExtResource("3_p6igo")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_yirl5"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_l0aid")
+size = Vector2(1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f71x5"]
+
+[sub_resource type="AudioStreamPolyphonic" id="AudioStreamPolyphonic_x50f8"]
+
+[node name="furnace" type="MeshInstance3D"]
+skeleton = NodePath("../..")
+script = SubResource("GDScript_b6ekb")
+
+[node name="Top" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("PlaneMesh_ckt4x")
+skeleton = NodePath("../../..")
+
+[node name="Side1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.5, 0.5)
+mesh = SubResource("PlaneMesh_ivigw")
+skeleton = NodePath("../../..")
+
+[node name="Marker3D" type="Marker3D" parent="Side1"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 2.98023e-08, 0.322696)
+
+[node name="SmokeParticles" type="GPUParticles3D" parent="Side1/Marker3D"]
+material_override = SubResource("StandardMaterial3D_w0li7")
+cast_shadow = 0
+gi_mode = 0
+emitting = false
+amount = 3
+amount_ratio = 0.5
+lifetime = 0.7
+interp_to_end = 0.01
+explosiveness = 0.5
+process_material = SubResource("ParticleProcessMaterial_jgplw")
+draw_pass_1 = SubResource("QuadMesh_1fb1k")
+
+[node name="FireParticles" type="GPUParticles3D" parent="Side1/Marker3D"]
+material_override = SubResource("StandardMaterial3D_qsqh6")
+cast_shadow = 0
+gi_mode = 0
+emitting = false
+amount = 2
+amount_ratio = 0.5
+lifetime = 0.7
+interp_to_end = 0.01
+explosiveness = 0.5
+process_material = SubResource("ParticleProcessMaterial_d7pe2")
+draw_pass_1 = SubResource("QuadMesh_hk1ja")
+
+[node name="Side2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.5, 0.5, 0)
+mesh = SubResource("PlaneMesh_yirl5")
+skeleton = NodePath("../../..")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_f71x5")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamPolyphonic_x50f8")
+
+[node name="WrokTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="WrokTimer" to="." method="_on_wrok_timer_timeout"]

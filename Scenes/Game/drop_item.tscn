@@ -1,0 +1,120 @@
+[gd_scene load_steps=5 format=3 uid="uid://d4ik8y0y2c7ja"]
+
+[ext_resource type="Texture2D" uid="uid://0arvkau0co5f" path="res://Graphics/Item/Block/log.png" id="2_pawjs"]
+[ext_resource type="Texture2D" uid="uid://c8kt5ml5fo4b0" path="res://Graphics/Item/shadow.png" id="2_tqlns"]
+
+[sub_resource type="GDScript" id="GDScript_kthdy"]
+script/source = "extends Node2D;
+
+@onready var shadow: Sprite2D = $Node/Shadow;
+@onready var texture_rect: TextureRect = $TextureRect;
+@onready var check_box: Control = $CheckBox;
+
+var item_type : String = \"\" : 
+	set(value) : 
+		if (Global.item_dict.has(value)) : 
+			$TextureRect.texture = Global.item_dict[value][\"texture\"];
+			$TextureRect.scale
+		else : $TextureRect.texture = null;
+		item_type = value;
+
+var velocity : Vector2 = Vector2.ZERO;
+var shadow_visible : bool = true : 
+	set(value) : 
+		self.visible = value;
+		$Node/Shadow.visible = value;
+
+var dragging : bool = false : 
+	set(value) : 
+		dragging = value;
+
+var z_pos : float = 640;
+var gravity : float = 3000;
+var resistance : float = 8000;
+var drag_protected : bool = false;
+
+func _ready() -> void:
+	z_pos += randf_range(-30, 80);
+	DragManager.drag_endding.connect(func(success : bool) : 
+		if (success && dragging) : 
+			self.queue_free();
+		dragging = false;
+		shadow_visible = true;
+	);
+
+func _process(delta: float) -> void:
+	shadow.global_position = Vector2(self.global_position.x, z_pos + 20);
+	var distance = abs(z_pos - global_position.y)
+	shadow.scale = texture_rect.scale * max(1.0 - distance / z_pos, 0.0) * 3.2; 
+	shadow.modulate.a = min(max(1.0 - distance / z_pos, 0.0) * 0.5, 1.0);
+	
+	if (!dragging) : 
+		global_position += velocity * delta;
+		if (global_position.y < z_pos) : 
+			velocity.y += gravity * delta;
+		else : 
+			drag_protected = false;
+			velocity.y = 0.0;
+			global_position.y = z_pos;
+			velocity.x = move_toward(velocity.x, 0.0, delta * resistance);
+	else : 
+		z_pos = (global_position.y);
+		z_pos = clamp(z_pos, 610, 720);
+
+func _input(event: InputEvent) -> void:
+	if (!drag_protected && event is InputEventMouse) : 
+		if (event is InputEventMouseMotion && dragging) : 
+			global_position = event.global_position;
+		if (event is InputEventMouseButton && check_box.get_global_rect().has_point(event.position)) : 
+			if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT && !DragManager.dragging) : 
+				DragManager.drag_start([\"IngredientsDrag\", item_type]);
+				var spr : Node = Sprite2D.new();
+				spr.texture = Global.item_dict[item_type][\"texture\"];
+				DragManager.set_drag_preview(spr);
+				dragging = true;
+				velocity = Vector2.ZERO;
+				shadow_visible = false;
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_mhvn4"]
+blend_mode = 4
+
+[node name="DropItem" type="Node2D" groups=["DropItem"]]
+y_sort_enabled = true
+script = SubResource("GDScript_kthdy")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+y_sort_enabled = true
+custom_minimum_size = Vector2(16, 16)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -32.0
+offset_top = -32.0
+offset_right = 32.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(32, 32)
+texture = ExtResource("2_pawjs")
+expand_mode = 1
+
+[node name="Node" type="Node" parent="."]
+
+[node name="Shadow" type="Sprite2D" parent="Node"]
+z_index = -1
+material = SubResource("CanvasItemMaterial_mhvn4")
+position = Vector2(0, 20)
+scale = Vector2(4, 4)
+texture = ExtResource("2_tqlns")
+offset = Vector2(0, -4.75)
+
+[node name="CheckBox" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -47.0
+offset_top = -49.0
+offset_right = 47.0
+offset_bottom = 49.0

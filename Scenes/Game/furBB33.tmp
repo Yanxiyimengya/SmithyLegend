@@ -1,0 +1,127 @@
+[gd_scene load_steps=9 format=3 uid="uid://bfy43uxjjft4f"]
+
+[sub_resource type="GDScript" id="GDScript_xuq18"]
+script/source = "extends Node3D;
+
+signal finished(furnace : Node3D)
+
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+@onready var f: Node3D = $FP;
+
+var furnace_list : Array[Node3D] = [];
+const FURNACE = preload(\"res://Scenes/Game/furnace_single.tscn\");
+
+func add_furnace(is_blastfurnace : bool) : 
+	var item : Node3D = FURNACE.instantiate();
+	item.position.y = furnace_list.size();
+	item.is_blastfurnace = is_blastfurnace;
+	f.add_child(item);
+	furnace_list.append(item);
+	await get_tree().process_frame;
+	item.side.mesh = item.side.mesh.duplicate(true);
+	item.timeout.connect(func() : 
+		finished.emit(item);
+	);
+
+func play_anim(anim : StringName) : 
+	animation_player.play(anim);
+"
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ik3wn"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_qf1l2"]
+sky_material = SubResource("ProceduralSkyMaterial_ik3wn")
+
+[sub_resource type="Environment" id="Environment_ma1js"]
+background_mode = 2
+sky = SubResource("Sky_qf1l2")
+
+[sub_resource type="Animation" id="Animation_pab2w"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("FP:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("FP:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_eb63m"]
+resource_name = "Shake"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("FP:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0.139626, 0), Vector3(0, -0.122173, 0), Vector3(0, 0.10472, 0), Vector3(0, -0.0872665, 0), Vector3(0, 0.0523599, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_51xgt"]
+resource_name = "Shut"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("FP:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0666667, 0.133333, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(1, 1, 1), Vector3(0.9, 0.9, 0.9), Vector3(1.05, 1.05, 1.05), Vector3(1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_fr8o7"]
+_data = {
+"RESET": SubResource("Animation_pab2w"),
+"Shake": SubResource("Animation_eb63m"),
+"Shut": SubResource("Animation_51xgt")
+}
+
+[node name="furnace" type="Node3D"]
+script = SubResource("GDScript_xuq18")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_ma1js")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.668968, -0.189967, 0.718606, -0.190896, 0.890451, 0.413104, -0.71836, -0.413532, 0.559419, -0.0116143, 0.0513868, -0.0211329)
+light_color = Color(0.853488, 0.853488, 0.853488, 1)
+
+[node name="FP" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.241914, -0.153131, 0.958138, 0.00196758, 0.987544, 0.157334, -0.970296, -0.036176, 0.239202, 1.54056, 2.77148, -0.422545)
+projection = 1
+size = 5.58659
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_fr8o7")
+}

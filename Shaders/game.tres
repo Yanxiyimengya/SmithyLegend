@@ -1,0 +1,41 @@
+[gd_resource type="ShaderMaterial" load_steps=6 format=3 uid="uid://bqws85am72dk4"]
+
+[ext_resource type="Shader" path="res://Shaders/chopping_block.gdshader" id="1_fvvst"]
+
+[sub_resource type="Curve" id="Curve_afwo6"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.730769, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_mbuqc"]
+curve = SubResource("Curve_afwo6")
+
+[sub_resource type="Curve" id="Curve_fhlm6"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.0019356), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_418hl"]
+curve = SubResource("Curve_fhlm6")
+
+[resource]
+resource_local_to_scene = true
+shader = ExtResource("1_fvvst")
+shader_parameter/time_factor = 1.4
+shader_parameter/progress = 0.0
+shader_parameter/oneshot = false
+shader_parameter/init_size = 0.036
+shader_parameter/init_interval = 0.129
+shader_parameter/init_offset = 0.1
+shader_parameter/init_num = 5.0
+shader_parameter/init_direction = Vector2(-0.135, 1.09)
+shader_parameter/rnd_direction_factor = Vector2(0.535, 0.965)
+shader_parameter/rnd_size_factor = Vector2(1, 1)
+shader_parameter/rnd_rotate_factor = 0.0
+shader_parameter/rnd_rotate_offset = 0.0
+shader_parameter/angle_velocity_min = 0.0
+shader_parameter/angle_velocity_max = 0.0
+shader_parameter/expand_factor = Vector2(4, 4)
+shader_parameter/expand_offset = Vector2(-1.635, -1.165)
+shader_parameter/bounce_thresh = 0.0
+shader_parameter/bounce_factor = 0.0
+shader_parameter/life_rate_alpha_decay_curve = SubResource("CurveTexture_mbuqc")
+shader_parameter/life_rate_scale_decay_curve = SubResource("CurveTexture_418hl")

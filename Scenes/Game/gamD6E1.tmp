@@ -1,0 +1,382 @@
+[gd_scene load_steps=25 format=3 uid="uid://3cfrpxyldmeo"]
+
+[ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/background_ow.png" id="1_023tj"]
+[ext_resource type="PackedScene" uid="uid://c7n0juspclyhv" path="res://Scenes/ItemBar/item_bar_gui.tscn" id="2_knh23"]
+[ext_resource type="Texture2D" uid="uid://dxfodcou6hvyu" path="res://Graphics/smithy.png" id="3_jwpy8"]
+[ext_resource type="Texture2D" uid="uid://c20py6hhsmvit" path="res://Graphics/IronWorker/IronWorkerVillager.png" id="4_p5dng"]
+[ext_resource type="Texture2D" uid="uid://3qithdg557f1" path="res://Graphics/BlockTexture/bag.png" id="5_4dgs3"]
+[ext_resource type="PackedScene" uid="uid://bfy43uxjjft4f" path="res://Scenes/Game/furnace.tscn" id="6_el30o"]
+[ext_resource type="Texture2D" uid="uid://ynxkh2d2o6nv" path="res://Graphics/girndstone_plantform.png" id="7_53elj"]
+[ext_resource type="Shader" path="res://Scenes/perspective.gdshader" id="8_0aske"]
+[ext_resource type="PackedScene" uid="uid://dk02p7itik21n" path="res://Scenes/Game/mine.tscn" id="8_m858s"]
+[ext_resource type="Texture2D" uid="uid://62nwtyoqw3ry" path="res://Graphics/BlockTexture/crafting_table_top.png" id="10_u4yik"]
+[ext_resource type="Texture2D" uid="uid://dfr07lk8pbjdu" path="res://Graphics/Item/raw_gold.png" id="10_wafls"]
+[ext_resource type="Texture2D" uid="uid://wbonv8dvg7vp" path="res://Graphics/Item/diamond.png" id="11_6l7t2"]
+
+[sub_resource type="GDScript" id="GDScript_4do7n"]
+script/source = "extends Node2D;
+@onready var iron_worker_soundplayer: AudioStreamPlayer = $IronWorkerSoundPlayer
+@onready var smithy_house: Node2D = $SmithyHouse;
+@onready var iron_worker_villager: Sprite2D = $SmithyHouse/Marker2D/IronWorkerVillager;
+
+
+var day : int = 0;
+
+func _ready() -> void:
+	if (day == 0) : 
+		await get_tree().create_timer(1).timeout;
+		
+		smithy_house.villiger_speaking = true;
+		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/day1_voice1.MP3\");
+		iron_worker_soundplayer.play();
+		await iron_worker_soundplayer.finished;
+		smithy_house.villiger_speaking = false;
+		
+		await get_tree().create_timer(0.25).timeout;
+		
+		smithy_house.villiger_speaking = true;
+		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/day1_voice2.MP3\");
+		iron_worker_soundplayer.play();
+		await iron_worker_soundplayer.finished;
+		smithy_house.villiger_speaking = false;
+		
+		iron_worker_villager.can_open_gui = true;
+"
+
+[sub_resource type="GDScript" id="GDScript_0we0t"]
+script/source = "extends Node2D;
+
+@onready var item_bar: Control = $ItemBar;
+@onready var bag_export_marker: Marker2D = $Marker2D/IronWorkerVillager/Bag/BagExportMarker
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+@onready var iron_worker_villager: Sprite2D = $Marker2D/IronWorkerVillager;
+var villiger_speaking : bool = false : 
+	set(value) :
+		if (value) :
+			animation_player.play(&\"VillagerSpeakingAnim\");
+		else : 
+			animation_player.stop();
+		villiger_speaking = value;
+
+@onready var mine: Sprite2D = $\"../WorkSpace/GirndstonePlantform/Mine/Mine\"
+
+func _ready() -> void : 
+	
+	item_bar.add_item_bar(\"iron\", preload(\"res://Graphics/Item/raw_iron.png\"), \"生铁\");
+	
+	item_bar.select_item.connect(func(item_id : Variant) : 
+		match (item_id) : 
+			\"iron\" : 
+				iron_worker_villager.replenishment(bag_export_marker.global_position, mine.global_position, preload(\"res://Graphics/Item/raw_iron.png\"));
+	);
+	
+	pass;
+"
+
+[sub_resource type="GDScript" id="GDScript_a3pdo"]
+script/source = "extends Sprite2D;
+@onready var item_bar: Control = $\"../../ItemBar\";
+@onready var bag_sprite : Sprite2D = $Bag;
+@onready var iron_worker_sound_player: AudioStreamPlayer = $\"../../../IronWorkerSoundPlayer\"
+
+
+var can_open_gui : bool= false;
+var gui_openning : bool= false;
+
+var VILLIGER_SOUND_HAGGLE : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_haggle1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_haggle2.ogg\")
+];
+var VILLIGER_SOUND_YES : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_yes1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes2.ogg\")
+];
+
+func _on_area_2d_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
+	if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
+		if (can_open_gui) : 
+			var tween : Tween = get_tree().create_tween();
+			if (gui_openning) : 
+				iron_worker_sound_player.stream = VILLIGER_SOUND_YES[randi() % 2];
+				iron_worker_sound_player.play();
+				
+				tween.tween_property(self, \"rotation_degrees\", 8.0, 0.2);
+				tween.tween_property(item_bar, \"pivot_offset:x\", 220.0, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_SINE);
+				item_bar.mouse_filter = Control.MOUSE_FILTER_PASS;
+			else : 
+				iron_worker_sound_player.stream = VILLIGER_SOUND_HAGGLE[randi() % 2];
+				iron_worker_sound_player.play();
+				
+				tween.tween_property(self, \"rotation_degrees\", 2.0, 0.2);
+				tween.tween_property(item_bar, \"pivot_offset:x\", 0.0, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CIRC);
+				item_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE;
+			can_open_gui = false;
+			await tween.finished;
+			can_open_gui = true;
+			gui_openning = !gui_openning;
+
+const ITEM_ADD_EFFECT = preload(\"res://Scenes/Game/item_add_effect.tscn\");
+func replenishment(start : Vector2, end : Vector2, item_texture : Texture2D) : 
+	var tween : Tween = get_tree().create_tween();
+	tween.tween_property(bag_sprite, \"scale\", Vector2.ONE * 0.1, 0.1).as_relative();
+	tween.tween_property(bag_sprite, \"scale\", Vector2.ONE * -0.1, 0.1).as_relative();
+	
+	var item : Node = ITEM_ADD_EFFECT.instantiate();
+	item.start_position = start;
+	item.target_position = end + Vector2(randi_range(-20, 20), randi_range(-20, 20));
+	item.control_point = Vector2(end.x, start.y - start.y * 0.3) + Vector2(randi_range(-50, 50), randi_range(-80, 80));;
+	item.texture = item_texture;
+	get_tree().current_scene.add_child(item);
+	
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_issmf"]
+size = Vector2(377.008, 900.053)
+
+[sub_resource type="Animation" id="Animation_6et7n"]
+resource_name = "IronWorkerReplenishment"
+
+[sub_resource type="Animation" id="Animation_osi8j"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.139626]
+}
+
+[sub_resource type="Animation" id="Animation_5g8x2"]
+resource_name = "VillagerIdle"
+length = 5.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0666667, 0.133333, 0.2, 0.266667, 0.333333, 0.4, 0.466667, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1, 4, 4.06667, 4.13333, 4.2, 4.26667, 4.33333, 4.4, 4.46667, 4.53333, 4.6, 4.66667, 4.73333, 4.8, 4.86667, 4.93333, 5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.139626, 0.140389, 0.142644, 0.146293, 0.151176, 0.157079, 0.163746, 0.170884, 0.178182, 0.18532, 0.191986, 0.19789, 0.202773, 0.206422, 0.208677, 0.20944, 0.20944, 0.208677, 0.206422, 0.202773, 0.19789, 0.191986, 0.18532, 0.178182, 0.170884, 0.163746, 0.15708, 0.151176, 0.146293, 0.142644, 0.140389, 0.139626]
+}
+
+[sub_resource type="Animation" id="Animation_ban0g"]
+resource_name = "VillagerSoundAnim"
+length = 0.15
+loop_mode = 1
+step = 0.01
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SmithyHouse/Marker2D/IronWorkerVillager:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -5), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.139626, 0.139626, 0.139626]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("SmithyHouse/Marker2D/IronWorkerVillager:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.5, 0.5), Vector2(0.51, 0.51), Vector2(0.5, 0.5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_hm501"]
+_data = {
+"IronWorkerReplenishment": SubResource("Animation_6et7n"),
+"RESET": SubResource("Animation_osi8j"),
+"VillagerIdle": SubResource("Animation_5g8x2"),
+"VillagerSpeakingAnim": SubResource("Animation_ban0g")
+}
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_brvf0"]
+shader = ExtResource("8_0aske")
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 39.0
+shader_parameter/inset = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_86j86"]
+shader = ExtResource("8_0aske")
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 39.0
+shader_parameter/inset = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pp55t"]
+bg_color = Color(0, 0, 0, 0.266667)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="Game" type="Node2D"]
+script = SubResource("GDScript_4do7n")
+
+[node name="BackgroundOw" type="Sprite2D" parent="."]
+position = Vector2(574, 349)
+scale = Vector2(0.542838, 0.542838)
+texture = ExtResource("1_023tj")
+
+[node name="SmithyHouse" type="Node2D" parent="."]
+position = Vector2(-70, -9)
+script = SubResource("GDScript_0we0t")
+
+[node name="ItemBar" parent="SmithyHouse" instance=ExtResource("2_knh23")]
+offset_left = 341.0
+offset_top = 181.0
+offset_right = 434.0
+offset_bottom = 314.0
+scale = Vector2(2, 2)
+pivot_offset = Vector2(220, 0)
+mouse_filter = 2
+
+[node name="SmithyR" type="Sprite2D" parent="SmithyHouse"]
+position = Vector2(254, 343)
+scale = Vector2(0.62051, 0.62051)
+texture = ExtResource("3_jwpy8")
+region_enabled = true
+region_rect = Rect2(849.149, 0, 246.781, 1335)
+
+[node name="Marker2D" type="Marker2D" parent="SmithyHouse"]
+position = Vector2(207, 670)
+
+[node name="IronWorkerVillager" type="Sprite2D" parent="SmithyHouse/Marker2D"]
+rotation = 0.139626
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_p5dng")
+offset = Vector2(15.9168, -447.12)
+script = SubResource("GDScript_a3pdo")
+
+[node name="Bag" type="Sprite2D" parent="SmithyHouse/Marker2D/IronWorkerVillager"]
+position = Vector2(98.5986, -448.083)
+texture = ExtResource("5_4dgs3")
+offset = Vector2(2.66733, -68.5024)
+
+[node name="BagExportMarker" type="Marker2D" parent="SmithyHouse/Marker2D/IronWorkerVillager/Bag"]
+position = Vector2(19.2273, -121.862)
+
+[node name="Area2D" type="Area2D" parent="SmithyHouse/Marker2D/IronWorkerVillager"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SmithyHouse/Marker2D/IronWorkerVillager/Area2D"]
+position = Vector2(18.1245, -440.026)
+shape = SubResource("RectangleShape2D_issmf")
+
+[node name="SmithyL" type="Sprite2D" parent="SmithyHouse"]
+position = Vector2(-86, 343)
+scale = Vector2(0.62051, 0.62051)
+texture = ExtResource("3_jwpy8")
+region_enabled = true
+region_rect = Rect2(0, 0, 849.149, 1335)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="SmithyHouse"]
+root_node = NodePath("../..")
+libraries = {
+"": SubResource("AnimationLibrary_hm501")
+}
+
+[node name="IronWorkerSoundPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="WorkSpace" type="Node2D" parent="."]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="WorkSpace"]
+offset_left = 776.0
+offset_top = 142.0
+offset_right = 1288.0
+offset_bottom = 654.0
+scale = Vector2(1.2, 1.2)
+
+[node name="SubViewport" type="SubViewport" parent="WorkSpace/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="furnace" parent="WorkSpace/SubViewportContainer/SubViewport" instance=ExtResource("6_el30o")]
+
+[node name="GirndstonePlantform" type="Sprite2D" parent="WorkSpace"]
+position = Vector2(647, 664)
+scale = Vector2(0.712915, 0.712914)
+texture = ExtResource("7_53elj")
+
+[node name="Mine" type="Node2D" parent="WorkSpace/GirndstonePlantform"]
+position = Vector2(-54.705, -15.4296)
+
+[node name="Mine" parent="WorkSpace/GirndstonePlantform/Mine" instance=ExtResource("8_m858s")]
+position = Vector2(-283.575, -239.949)
+scale = Vector2(0.8, 0.8)
+
+[node name="Mine2" parent="WorkSpace/GirndstonePlantform/Mine" instance=ExtResource("8_m858s")]
+material = SubResource("ShaderMaterial_brvf0")
+position = Vector2(-0.234917, -239.51)
+scale = Vector2(0.8, 0.8)
+item_texture = ExtResource("10_wafls")
+
+[node name="Mine3" parent="WorkSpace/GirndstonePlantform/Mine" instance=ExtResource("8_m858s")]
+material = SubResource("ShaderMaterial_86j86")
+position = Vector2(298.538, -239.51)
+scale = Vector2(0.8, 0.8)
+item_texture = ExtResource("11_6l7t2")
+
+[node name="CraftingTableTop" type="TextureRect" parent="WorkSpace"]
+texture_filter = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1248.0
+offset_top = 715.0
+offset_right = 1264.0
+offset_bottom = 731.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(10, 10)
+pivot_offset = Vector2(16, 15.6)
+texture = ExtResource("10_u4yik")
+
+[node name="Panel" type="Panel" parent="WorkSpace/CraftingTableTop"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 1.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pp55t")
+
+[connection signal="input_event" from="SmithyHouse/Marker2D/IronWorkerVillager/Area2D" to="SmithyHouse/Marker2D/IronWorkerVillager" method="_on_area_2d_input_event"]

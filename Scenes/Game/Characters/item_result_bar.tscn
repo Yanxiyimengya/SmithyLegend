@@ -1,0 +1,41 @@
+[gd_scene load_steps=3 format=3 uid="uid://bogx04kgbg6ue"]
+
+[ext_resource type="Texture2D" uid="uid://q8n7lrc45hjo" path="res://Graphics/UI/checkmark.png" id="1_r8qt6"]
+
+[sub_resource type="GDScript" id="GDScript_ms6c7"]
+script/source = "extends TextureRect;
+
+var provided : bool = false : 
+	set(value) : 
+		provided = value;
+		self.modulate = Color.GRAY if(value)else(Color.WHITE);
+		$Mark.visible = value;
+"
+
+[node name="ItemResultBar" type="TextureRect"]
+custom_minimum_size = Vector2(32, 32)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = 1.0
+offset_right = -1251.0
+offset_bottom = -714.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+script = SubResource("GDScript_ms6c7")
+
+[node name="Mark" type="TextureRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -14.0
+offset_top = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("1_r8qt6")

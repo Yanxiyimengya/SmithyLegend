@@ -1,0 +1,63 @@
+[gd_scene load_steps=7 format=3 uid="uid://drmxukacs1pxt"]
+
+[ext_resource type="Texture2D" uid="uid://bo7koufla3x7x" path="res://Graphics/UI/item_bar.png" id="1_gy6bi"]
+[ext_resource type="Texture2D" uid="uid://c3d6b8574icjw" path="res://Graphics/Item/Iron/raw_iron.png" id="2_hnnd6"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_r1qcw"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hvwpm"]
+texture = ExtResource("1_gy6bi")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+
+[sub_resource type="GDScript" id="GDScript_3ejjn"]
+script/source = "extends PanelContainer;
+
+var texture : Texture = null : 
+	set(value) : 
+		texture = value;
+		$HBoxContainer/MarginContainer/TextureRect.texture = value;
+	get : 
+		return $HBoxContainer/MarginContainer/TextureRect.texture;
+
+var text : String = \"\" : 
+	set(value) : 
+		text = value;
+		$HBoxContainer/Label.text = value;
+	get : 
+		return $HBoxContainer/Label.text;
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_7th3v"]
+font = ExtResource("3_r1qcw")
+font_size = 14
+
+[node name="ItemBar" type="PanelContainer"]
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_hvwpm")
+script = SubResource("GDScript_3ejjn")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+texture = ExtResource("2_hnnd6")
+
+[node name="Label" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+text = "生铁"
+label_settings = SubResource("LabelSettings_7th3v")

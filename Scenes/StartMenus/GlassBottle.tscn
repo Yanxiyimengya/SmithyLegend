@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3 uid="uid://dir34udfi2rhp"]
+
+[ext_resource type="Texture2D" uid="uid://dntp3013xvikw" path="res://Graphics/Item/glass_bottle.png" id="1_4ecw5"]
+[ext_resource type="Texture2D" uid="uid://c8kt5ml5fo4b0" path="res://Graphics/Item/shadow.png" id="2_63sfg"]
+
+[sub_resource type="GDScript" id="GDScript_asra3"]
+script/source = "extends Node2D;
+@onready var shadow: Sprite2D = $Node/Shadow;
+var z_pos : float = 640;
+
+var texture : Texture2D = null : 
+	set(value) : 
+		$GlassBottle.texture = value;
+	get : return $GlassBottle.texture;
+
+func _process(delta: float) -> void:
+	shadow.global_position = Vector2(self.global_position.x, z_pos);
+	shadow.scale = self.scale * 2*(cos(self.global_position.x * 0.05)); 
+	if (self.global_position.x < -50.0) : 
+		self.queue_free();
+	else : 
+		self.global_position.x -= delta * 100;
+		self.global_rotation_degrees -= 1.8;
+		self.global_position.y = z_pos + 5 * sin(self.global_position.x * 0.1) -18;
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_gmsbl"]
+blend_mode = 4
+
+[node name="Node2D" type="Node2D"]
+script = SubResource("GDScript_asra3")
+
+[node name="Node" type="Node" parent="."]
+
+[node name="Shadow" type="Sprite2D" parent="Node"]
+modulate = Color(1, 1, 1, 0.541176)
+material = SubResource("CanvasItemMaterial_gmsbl")
+scale = Vector2(4, 4)
+texture = ExtResource("2_63sfg")
+offset = Vector2(0, -4.75)
+
+[node name="GlassBottle" type="Sprite2D" parent="."]
+z_index = 1
+scale = Vector2(3, 3)
+texture = ExtResource("1_4ecw5")
+offset = Vector2(-0.333333, -1.33333)

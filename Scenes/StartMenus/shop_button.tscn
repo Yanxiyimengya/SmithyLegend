@@ -1,0 +1,70 @@
+[gd_scene load_steps=9 format=3 uid="uid://b41b2dtk78dn4"]
+
+[ext_resource type="Shader" path="res://Shaders/gama.gdshader" id="1_cbyr4"]
+[ext_resource type="Texture2D" uid="uid://n2ytkgauhjg3" path="res://Graphics/Item/emerald.png" id="1_pm38e"]
+[ext_resource type="Texture2D" uid="uid://c8kt5ml5fo4b0" path="res://Graphics/Item/shadow.png" id="2_76rvt"]
+[ext_resource type="Script" path="res://Scenes/StartMenus/shop_button.gd" id="2_tftyj"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_uj1ed"]
+[ext_resource type="Texture2D" uid="uid://q8n7lrc45hjo" path="res://Graphics/UI/checkmark.png" id="6_bv0k5"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_80g7p"]
+resource_local_to_scene = true
+shader = ExtResource("1_cbyr4")
+shader_parameter/value = null
+
+[sub_resource type="LabelSettings" id="LabelSettings_cj83k"]
+font = ExtResource("3_uj1ed")
+font_size = 24
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[node name="ShopButton" type="TextureButton"]
+z_index = 1
+material = SubResource("ShaderMaterial_80g7p")
+offset_right = 74.0
+offset_bottom = 74.0
+texture_normal = ExtResource("1_pm38e")
+stretch_mode = 0
+script = ExtResource("2_tftyj")
+texture = ExtResource("1_pm38e")
+
+[node name="ShadowSprite" type="Sprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.568627)
+show_behind_parent = true
+position = Vector2(37, 43)
+scale = Vector2(3.95, 3.95)
+texture = ExtResource("2_76rvt")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -11.0
+offset_top = 1.0
+offset_right = 11.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 0
+label_settings = SubResource("LabelSettings_cj83k")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("6_bv0k5")
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]

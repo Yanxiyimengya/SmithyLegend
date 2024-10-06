@@ -1,0 +1,41 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4ik8y0y2c7ja"]
+
+[ext_resource type="Texture2D" uid="uid://c3d6b8574icjw" path="res://Graphics/Item/raw_iron.png" id="1_iblvr"]
+[ext_resource type="Texture2D" uid="uid://c8kt5ml5fo4b0" path="res://Graphics/Item/shadow.png" id="2_tqlns"]
+
+[sub_resource type="GDScript" id="GDScript_303jj"]
+script/source = "extends Node2D;
+@onready var shadow: Sprite2D = $Node/Shadow;
+@onready var sprite_2d: Sprite2D = $Sprite2D;
+
+var z_pos : float = 640;
+var velocity : Vector2 = Vector2.ZERO;
+var gravity : Vector2 = Vector2.DOWN;
+
+func _process(delta: float) -> void:
+	shadow.global_position = Vector2(self.global_position.x, z_pos);
+	var distance = abs(z_pos - global_position.y)
+	shadow.scale = sprite_2d.scale * max(1.0 - distance / z_pos, 0.0) * 0.7 
+	
+	if (global_position.y < z_pos) : 
+		velocity.y += gravity.y;
+	else : 
+		velocity.y = 0.0;
+	global_position += velocity;
+	
+"
+
+[node name="DragItem" type="Node2D"]
+script = SubResource("GDScript_303jj")
+
+[node name="Node" type="Node" parent="."]
+
+[node name="Shadow" type="Sprite2D" parent="Node"]
+position = Vector2(0, 640)
+texture = ExtResource("2_tqlns")
+offset = Vector2(0, -10)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = 1
+scale = Vector2(4, 4)
+texture = ExtResource("1_iblvr")

@@ -1,0 +1,664 @@
+[gd_scene load_steps=27 format=3 uid="uid://cuf2wici1h57u"]
+
+[ext_resource type="Texture2D" uid="uid://cwp57gj2bb5k" path="res://Graphics/BlockTexture/smooth_stone_slab_side.png" id="1_cukuh"]
+[ext_resource type="Texture2D" uid="uid://dluoq2dnai6g7" path="res://Graphics/BlockTexture/smooth_stone.png" id="2_w1dsa"]
+[ext_resource type="Texture2D" uid="uid://sujr27hdoigy" path="res://Graphics/BlockTexture/oak_log.png" id="3_nvfbw"]
+[ext_resource type="Texture2D" uid="uid://ck0mxa8vxffyo" path="res://Graphics/BlockTexture/Destory/destroy_stage_9.png" id="3_q6mqm"]
+[ext_resource type="Texture2D" uid="uid://c05ru2rajpoc5" path="res://Graphics/BlockTexture/oak_log_top.png" id="4_uthbd"]
+
+[sub_resource type="GDScript" id="GDScript_37wtk"]
+script/source = "extends Node3D;
+
+signal destoried;
+
+@onready var timer: Timer = $Timer;
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+const DESTROY_STAGE : Array[Texture2D] = [
+	preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_0.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_1.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_2.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_3.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_4.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_5.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_6.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_7.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_8.png\")
+	,preload(\"res://Graphics/BlockTexture/Destory/destroy_stage_9.png\")
+];
+const WOOD_DIG_SOUND : Array[AudioStream] = [
+	preload(\"res://Audio/Sound/Wood_dig1.mp3\"),
+	preload(\"res://Audio/Sound/Wood_dig2.mp3\"),
+	preload(\"res://Audio/Sound/Wood_dig3.mp3\")
+];
+const WOOD_STEP_SOUND : Array[AudioStream] = [
+	preload(\"res://Audio/Sound/Wood_step1.mp3\"),
+	preload(\"res://Audio/Sound/Wood_step2.mp3\"),
+	preload(\"res://Audio/Sound/Wood_step3.mp3\")
+];
+
+@onready var log: MeshInstance3D = $Log;
+var destory_process : int = 0 : 
+	set(value) : 
+		if ( (!$Timer.is_stopped() && can_hit) || (animation_player.current_animation != &\"Shake\" && animation_player.is_playing())) : 
+			return;
+		animation_player.play(&\"Shake\");
+		AudioManager.play_suond(WOOD_STEP_SOUND[randi() % 3]);
+		destory_process = value;
+		if (value > DESTROY_STAGE.size()) : 
+			destoried.emit();
+			timer.start(1);
+			visible_log = false;
+			destory_process = 0;
+		s_material.set_shader_parameter(\"use_destroy_texture\", (destory_process != 0));
+		t_material.set_shader_parameter(\"use_destroy_texture\", (destory_process != 0));
+		var texture : Texture;
+		if (destory_process > 0) : 
+			texture = DESTROY_STAGE[destory_process-1];
+		s_material.set_shader_parameter(\"destroy_texture\", texture);
+		t_material.set_shader_parameter(\"destroy_texture\", texture);
+var can_hit : bool = true;
+var visible_log : bool = true : 
+	set(value) : 
+		visible_log = value;
+		$Log.visible = value;
+		$Log.process_mode = Node.PROCESS_MODE_INHERIT if (value) else Node.PROCESS_MODE_DISABLED;
+@onready var t_material : ShaderMaterial = $Log/MeshInstance3DTop.mesh.material;
+@onready var s_material : ShaderMaterial = $Log/MeshInstance3D.mesh.material;
+
+func _ready() -> void:
+	visible_log = true;
+
+func play_anim(anim : StringName) : 
+	animation_player.play(anim);
+
+func _on_timer_timeout() -> void:
+	can_hit = false;
+	visible_log = true;
+	log.scale = Vector3.ONE * 0.01;
+	animation_player.play(&\"Create\");
+	AudioManager.play_suond(WOOD_DIG_SOUND[randi() % 3]);
+	await animation_player.animation_finished;
+	can_hit = true;
+"
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_askkj"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_jo5bs"]
+sky_material = SubResource("ProceduralSkyMaterial_askkj")
+
+[sub_resource type="Environment" id="Environment_81h6v"]
+background_mode = 2
+sky = SubResource("Sky_jo5bs")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6o3rd"]
+albedo_texture = ExtResource("1_cukuh")
+uv1_scale = Vector3(1, 0.5, 1)
+texture_filter = 0
+
+[sub_resource type="QuadMesh" id="QuadMesh_drujc"]
+material = SubResource("StandardMaterial3D_6o3rd")
+size = Vector2(1, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_82c65"]
+albedo_texture = ExtResource("2_w1dsa")
+texture_filter = 0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4ydxe"]
+material = SubResource("StandardMaterial3D_82c65")
+size = Vector2(1, 1)
+
+[sub_resource type="Shader" id="Shader_oxbsj"]
+code = "// NOTE: Shader automatically converted from Godot Engine 4.3.stable's StandardMaterial3D.
+
+shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec4 albedo : source_color;
+uniform sampler2D texture_albedo : source_color, filter_nearest, repeat_enable;
+uniform float point_size : hint_range(0.1, 128.0, 0.1);
+
+uniform float roughness : hint_range(0.0, 1.0);
+uniform sampler2D texture_metallic : hint_default_white, filter_nearest, repeat_enable;
+uniform vec4 metallic_texture_channel;
+uniform sampler2D texture_roughness : hint_roughness_r, filter_nearest, repeat_enable;
+
+uniform float specular : hint_range(0.0, 1.0, 0.01);
+uniform float metallic : hint_range(0.0, 1.0, 0.01);
+
+uniform vec3 uv1_scale;
+uniform vec3 uv1_offset;
+uniform vec3 uv2_scale;
+uniform vec3 uv2_offset;
+
+uniform sampler2D destroy_texture : source_color, filter_nearest, repeat_enable;
+uniform bool use_destroy_texture;
+
+void vertex() {
+	UV = UV * uv1_scale.xy + uv1_offset.xy;
+}
+
+void fragment() {
+	vec2 base_uv = UV;
+
+	vec4 albedo_tex = texture(texture_albedo, base_uv);
+	ALBEDO = albedo.rgb * albedo_tex.rgb;
+
+	float metallic_tex = dot(texture(texture_metallic, base_uv), metallic_texture_channel);
+	METALLIC = metallic_tex * metallic;
+	SPECULAR = specular;
+
+	vec4 roughness_texture_channel = vec4(1.0, 0.0, 0.0, 0.0);
+	float roughness_tex = dot(texture(texture_roughness, base_uv), roughness_texture_channel);
+	ROUGHNESS = roughness_tex * roughness;
+	
+	vec4 col = texture(destroy_texture, UV);
+	if (use_destroy_texture) {
+		ALBEDO = mix(ALBEDO, col.rgb, col.a);
+	}
+}
+
+
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_03l2o"]
+render_priority = 0
+shader = SubResource("Shader_oxbsj")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/point_size = 1.0
+shader_parameter/roughness = 1.0
+shader_parameter/metallic_texture_channel = null
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 0.0
+shader_parameter/uv1_scale = Vector3(1, 1, 1)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/use_destroy_texture = false
+shader_parameter/texture_albedo = ExtResource("3_nvfbw")
+shader_parameter/destroy_texture = ExtResource("3_q6mqm")
+
+[sub_resource type="QuadMesh" id="QuadMesh_h5xjx"]
+lightmap_size_hint = Vector2i(16, 15)
+material = SubResource("ShaderMaterial_03l2o")
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_6trj2"]
+load_path = "res://.godot/imported/destroy_stage_9.png-efde7e9d494f3f6130a46a9f7457b4e0.s3tc.ctex"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ib3xg"]
+render_priority = 0
+shader = SubResource("Shader_oxbsj")
+shader_parameter/albedo = Color(1, 1, 1, 1)
+shader_parameter/point_size = 1.0
+shader_parameter/roughness = 1.0
+shader_parameter/metallic_texture_channel = null
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 0.0
+shader_parameter/uv1_scale = Vector3(1, 1, 1)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)
+shader_parameter/use_destroy_texture = false
+shader_parameter/texture_albedo = ExtResource("4_uthbd")
+shader_parameter/destroy_texture = SubResource("CompressedTexture2D_6trj2")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_cej4k"]
+material = SubResource("ShaderMaterial_ib3xg")
+size = Vector2(1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_s2l8g"]
+
+[sub_resource type="Animation" id="Animation_8dfxv"]
+resource_name = "Create"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Log:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0333333, 0.0666667, 0.1, 0.133333, 0.166667, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.01, 0.01, 0.01), Vector3(0.385105, 0.385105, 0.385105), Vector3(0.658007, 0.658007, 0.658007), Vector3(0.840813, 0.840813, 0.840813), Vector3(0.838698, 0.838698, 0.838698), Vector3(0.782844, 0.782844, 0.782844), Vector3(0.8, 0.8, 0.8)]
+}
+
+[sub_resource type="Animation" id="Animation_nqp1d"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Log:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.8, 0.8, 0.8)]
+}
+
+[sub_resource type="Animation" id="Animation_4k5pj"]
+resource_name = "Shake"
+length = 0.25
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Log:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0375, 0.075, 0.1125, 0.15, 0.1875, 0.225),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.0349066, 0.139626, 0), Vector3(-0.0523599, -0.122173, 0.0349066), Vector3(0, 0.10472, 0), Vector3(0.0349066, -0.0872665, 0), Vector3(0, 0.0523599, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wyhou"]
+_data = {
+"Create": SubResource("Animation_8dfxv"),
+"RESET": SubResource("Animation_nqp1d"),
+"Shake": SubResource("Animation_4k5pj")
+}
+
+[sub_resource type="Shader" id="Shader_mtdfr"]
+code = "shader_type canvas_item;
+
+
+
+uniform float time_factor: hint_range(0.0, 2.0) = 0.0;
+
+uniform float progress: hint_range(0.0, 10.0) = 0.0;
+
+uniform bool oneshot = true;
+
+uniform float init_size: hint_range(0.0, 1.0) = 0.1;
+
+uniform float init_interval: hint_range(0.0, 1.0) = 0.2;
+
+uniform float init_offset: hint_range(0.0, 1.0) = 0.1;
+
+uniform float init_num = 5.0;
+
+uniform vec2 init_direction = vec2(0.0, 0.0);
+
+uniform vec2 rnd_direction_factor = vec2(1.0, 1.0);
+
+uniform vec2 rnd_size_factor = vec2(1.0, 1.0);
+
+
+
+uniform float rnd_rotate_factor : hint_range(0.0, 20.0, 0.1) = 0.0;
+
+uniform float rnd_rotate_offset : hint_range(0.0, 10.0, 0.1) = 0.0;
+
+uniform float angle_velocity_min : hint_range(-10.0, 10.0, 0.1) = 0.0;
+
+uniform float angle_velocity_max : hint_range(-10.0, 10.0, 0.1) = 0.0;
+
+
+
+uniform vec2 expand_factor = vec2(1.0, 1.0);
+
+uniform vec2 expand_offset = vec2(0.0, 0.0);
+
+
+
+//uniform float gravity: hint_range(0.0, 1.0) = 0.0;
+
+uniform sampler2D life_rate_alpha_decay_curve: source_color;
+
+uniform sampler2D life_rate_scale_decay_curve: source_color;
+
+uniform float bounce_thresh: hint_range(0.0, 1.0) = 1.0;
+
+uniform float bounce_factor: hint_range(0.0, 1.0) = 1.0;
+
+uniform sampler2D noise : repeat_enable ;
+
+//uniform area area_a;
+
+
+
+void vertex() {
+
+	// Called for every vertex the material is visible on.
+
+		VERTEX = expand_factor*VERTEX;
+
+}
+
+
+
+vec2 noise_vec2(vec2 uv) {
+
+	uv = vec2(dot(uv, vec2(127.1,311.7)), dot(uv, vec2(269.5,183.3)));
+
+	return fract(sin(uv) * 43758.5453123) * 0.5;
+
+}
+
+vec2 pred_pos(vec2 uv, vec2 direction, float time){
+
+	// 预测一段时间后的位置
+
+	vec2 res = uv + direction * time;
+
+	// 如果反弹地面, 在接触地面时改变y方向的速度
+
+	if (uv.y <bounce_thresh && res .y >bounce_thresh){
+
+		float passed_time = (bounce_thresh - uv.y)/direction.y;
+
+		vec2 new_uv = vec2(res.x, bounce_thresh);
+
+		vec2 new_direction = vec2(direction.x, -direction.y * bounce_factor);
+
+		float new_time = time - passed_time;
+
+		vec2 new_res = new_uv + new_direction * new_time;
+
+		return new_res;
+
+	}
+
+	return res;
+
+}
+
+mat2 rotate2d(float _angle){
+
+  return mat2( vec2(cos(_angle),-sin(_angle)),
+
+        vec2(sin(_angle),cos(_angle)));
+
+}
+
+
+
+struct area{
+
+	vec2 center;
+
+	vec2 size;
+
+	vec2 direction;
+
+	float angle;
+
+};
+
+bool is_in_area(area a, vec2 uv){
+
+	// 如何判断一个点在一个带角度的方形内部
+
+	// 很简单, 反方向旋转点就行了
+
+	vec2 angle_reversed_uv = uv - a.center;
+
+	angle_reversed_uv *= rotate2d(-a.angle);
+
+	angle_reversed_uv += a.center;
+
+	// 旋转之后就只需比较轴向距离
+
+	if(angle_reversed_uv.x > a.center.x - a.size.x &&
+
+		angle_reversed_uv.x < a.center.x + a.size.x &&
+
+		angle_reversed_uv.y > a.center.y - a.size.y &&
+
+		angle_reversed_uv.y < a.center.y + a.size.y ){
+
+			return true;
+
+		}
+
+	//if(uv.x > a.center.x - a.size.x &&
+
+		//uv.x < a.center.x + a.size.x &&
+
+		//uv.y > a.center.y - a.size.y &&
+
+		//uv.y < a.center.y + a.size.y ){
+
+			//return true;
+
+		//}
+
+	return false;
+
+}
+
+	
+
+void fragment() {
+
+	// Called for every pixel the material is visible on.
+
+	vec2 uv = expand_factor * (UV) + expand_offset;
+
+	area a ;
+
+	COLOR = vec4(0.);
+
+	
+
+	for(float i = 0.0; i< init_num; i++){
+
+		for(float j = 0.0; j< init_num; j++){
+
+ 
+
+			vec2 ns_max_life = noise_vec2(vec2(0.1, 0.3) * (0.0+11.0*i + j));
+
+ 
+
+			float progress_time;
+
+			//如果一次性发射, 则不需要对时间取模, 但time_factor必须为0
+
+			if (oneshot){
+
+				 progress_time = TIME *time_factor + progress;
+
+			}
+
+			else{
+
+				 progress_time = mod(TIME *time_factor + progress, 2.0 + ns_max_life.x); 
+
+			}
+
+			float life_rate = progress_time/(2.0 + ns_max_life.x);
+
+ 
+
+			vec2 org_center = init_offset + vec2( i * init_interval , j * init_interval);
+
+			//随机速度两个(0,0.5)本身就是90度随机方向的
+
+			vec2 rnd_direction = noise_vec2(vec2(0.1, 0.3) * (0.1+11.0*i +j));
+
+			//只对随机速度部分进行旋转即随机旋转
+
+			rnd_direction *= rotate2d(rnd_rotate_offset + ns_max_life.y * rnd_rotate_factor);
+
+ 
+
+			//创建结构体 area a 方便存储区块信息
+
+			a.center = org_center;
+
+			//名为direction 实为速度
+
+			a.direction = init_direction + rnd_direction * rnd_direction_factor;
+
+			// 应用速度预测经过progress_time后粒子的中心位置
+
+			a.center = pred_pos(a.center, a.direction, progress_time );
+
+			//如果希望粒子表面不那么平滑可以使用下面的ns_size随机尺寸
+
+			a.size = vec2(init_size, init_size);
+
+			vec2 ns_size = texture(noise, uv -a.center + 0.2*i + 0.1*j).rg;
+
+			a.size *= 1.0 + ns_size * rnd_size_factor;
+
+			//根据curve曲线和当前生命周期 缩放粒子的大小
+
+			a.size *= texture(life_rate_scale_decay_curve, vec2(life_rate)).r;
+
+			//应用在(angle_velocity_min, angle_velocity_max)之间的随机角速度
+
+			float angle_velocity = angle_velocity_min +  
+
+					noise_vec2(vec2(13.1, 12.1) * (11.0*i + j)).x * 2.0 *
+
+					(angle_velocity_max - angle_velocity_min);
+
+			a.angle = angle_velocity * progress_time;
+
+			//判断当前点(即uv)是否在当前遍历的区域area内部
+
+			//如果在区域外就不考虑了
+
+			if(is_in_area(a, uv)){
+
+				//如果在区域内则说明当前位置存在该粒子内部,进行处理
+
+				// 修复bug 区块是旋转了但是图像没旋转, 因此旋转uv
+
+				vec2 angle_reversed_uv = uv - a.center;
+
+				angle_reversed_uv *= rotate2d(-a.angle);
+
+				angle_reversed_uv += a.center;
+
+				//计算当前uv 随着当前粒子(a)回溯到时间为0时的位置back_uv
+
+				vec2 back_uv = angle_reversed_uv - a.center + org_center;
+
+ 
+
+				//使用back_uv取样, 并应用透明度曲线
+
+				float rate_alpha = texture(life_rate_alpha_decay_curve, vec2(life_rate)).r;
+
+				COLOR = texture(TEXTURE, back_uv) *vec4(1.,1.,1., rate_alpha);
+
+			}
+
+		}
+
+	}
+
+}
+
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hrhbk"]
+shader = SubResource("Shader_mtdfr")
+shader_parameter/time_factor = 0.0
+shader_parameter/progress = 0.0
+shader_parameter/oneshot = true
+shader_parameter/init_size = 0.1
+shader_parameter/init_interval = 0.2
+shader_parameter/init_offset = 0.1
+shader_parameter/init_num = 5.0
+shader_parameter/init_direction = Vector2(0, 0)
+shader_parameter/rnd_direction_factor = Vector2(1, 1)
+shader_parameter/rnd_size_factor = Vector2(1, 1)
+shader_parameter/rnd_rotate_factor = 0.0
+shader_parameter/rnd_rotate_offset = 0.0
+shader_parameter/angle_velocity_min = 0.0
+shader_parameter/angle_velocity_max = 0.0
+shader_parameter/expand_factor = Vector2(1, 1)
+shader_parameter/expand_offset = Vector2(0, 0)
+shader_parameter/bounce_thresh = 1.0
+shader_parameter/bounce_factor = 1.0
+
+[node name="ChoppingBlock" type="Node3D"]
+script = SubResource("GDScript_37wtk")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 2.98023e-08, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -5.96046e-08, 0, 0)
+light_color = Color(0.7481, 0.7481, 0.7481, 1)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_81h6v")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-0.0436194, -0.422216, 0.905445, 0, 0.906308, 0.422618, -0.999049, 0.0184344, -0.0395326, 2.022, 1.55, 0)
+projection = 1
+fov = 70.0
+size = 1.63324
+near = 0.001
+
+[node name="BottomCB" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BottomCB"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.5, 0.25, 0)
+mesh = SubResource("QuadMesh_drujc")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="BottomCB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0.5)
+mesh = SubResource("QuadMesh_drujc")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="BottomCB"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.25, -0.5)
+mesh = SubResource("QuadMesh_drujc")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="BottomCB"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0.5, 0)
+mesh = SubResource("PlaneMesh_4ydxe")
+
+[node name="Log" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0.5, 0)
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Log"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.5, 0.5, 0)
+mesh = SubResource("QuadMesh_h5xjx")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Log"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.5)
+mesh = SubResource("QuadMesh_h5xjx")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Log"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.5, -0.5)
+mesh = SubResource("QuadMesh_h5xjx")
+
+[node name="MeshInstance3DTop" type="MeshInstance3D" parent="Log"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 1, 0)
+mesh = SubResource("PlaneMesh_cej4k")
+
+[node name="Area3D" type="Area3D" parent="Log"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Log/Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_s2l8g")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_wyhou")
+}
+
+[node name="Timer" type="Timer" parent="."]
+one_shot = true
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68071, 0)
+material_override = SubResource("ShaderMaterial_hrhbk")
+billboard = 1
+shaded = true
+texture_filter = 0
+texture = ExtResource("3_nvfbw")
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

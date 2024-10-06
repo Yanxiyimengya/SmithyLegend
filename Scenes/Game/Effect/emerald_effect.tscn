@@ -1,0 +1,93 @@
+[gd_scene load_steps=9 format=3 uid="uid://b2ie3020jcxg1"]
+
+[ext_resource type="Texture2D" uid="uid://n2ytkgauhjg3" path="res://Graphics/Item/emerald.png" id="1_1v5mj"]
+[ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="1_fhsu2"]
+[ext_resource type="Texture2D" uid="uid://ddsd236iqpq7p" path="res://Graphics/ParticleEffect/glint.png" id="3_qyh0p"]
+
+[sub_resource type="GDScript" id="GDScript_vgd4g"]
+script/source = "extends Node2D;
+
+signal finshed;
+
+@onready var emerald: Sprite2D = $Emerald;
+
+var y_rot : float = 0.0 : 
+	set(value) : 
+		if (value >= 180) : 
+			value = -180;
+		y_rot = value;
+		emerald.material.set_shader_parameter(\"y_rot\", y_rot);
+
+var start_position : Vector2 = Vector2.ZERO;
+var target_position : Vector2 = Vector2.ZERO;
+var control_point : Vector2 = Vector2.ZERO;
+var process : float= 0.0;
+var speed : float = 0.5;
+var acceleration : float = 0.0006;
+var time_scale : float = 1.0;
+
+func _ready() -> void:
+	scale = Vector2.ZERO;
+	modulate.a = 0.0;
+	var tween : Tween = get_tree().create_tween();
+	tween.bind_node(self);
+	tween.tween_property(self, \"scale\", Vector2.ONE, 0.1);
+	tween.tween_property(self, \"modulate:a\", 1.0, 0.1);
+
+func _process(delta: float) -> void:
+	y_rot += delta * 180;
+	if (process <= 1.0) : 
+		process += speed * delta * time_scale;
+		speed -= acceleration * time_scale;
+		var l1 =  lerp(start_position, control_point, process);
+		var l2 =  lerp(control_point, target_position, process);
+		global_position = lerp(l1, l2, process);
+	else : 
+		scale = Vector2.ONE;
+		modulate.a = 1.0;
+		var tween : Tween = get_tree().create_tween();
+		tween.tween_property(self, \"scale\", Vector2.ZERO, 0.1);
+		tween.tween_property(self, \"modulate:a\", 0.0, 0.1);
+		set_process(false);
+		await tween.finished;
+		finshed.emit();
+		self.queue_free();
+"
+
+[sub_resource type="Curve" id="Curve_g14l5"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_cmphi"]
+curve = SubResource("Curve_g14l5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_hjj83"]
+particle_flag_disable_z = true
+emission_shape_scale = Vector3(15, 15, 0)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+gravity = Vector3(0, 98, 0)
+scale_min = 2.0
+scale_max = 2.0
+scale_curve = SubResource("CurveTexture_cmphi")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_c6cs6"]
+resource_local_to_scene = true
+shader = ExtResource("1_fhsu2")
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = false
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 0.0
+shader_parameter/inset = 0.0
+
+[node name="EmeraldEffect" type="Node2D"]
+script = SubResource("GDScript_vgd4g")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+process_material = SubResource("ParticleProcessMaterial_hjj83")
+texture = ExtResource("3_qyh0p")
+
+[node name="Emerald" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_c6cs6")
+scale = Vector2(3, 3)
+texture = ExtResource("1_1v5mj")

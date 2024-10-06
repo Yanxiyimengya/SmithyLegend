@@ -1,0 +1,45 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="SmithyLegend"
+run/main_scene="res://Scenes/StartMenus/start_menu_2.tscn"
+config/features=PackedStringArray("4.3", "Mobile")
+config/icon="res://icon.png"
+
+[autoload]
+
+SceneManager="*res://Scenes/SceneManager/SceneManager.tscn"
+DragManager="*res://Scenes/DragManager/DragManager.tscn"
+Global="*res://Scenes/Global/Global.tscn"
+AudioManager="*res://Scenes/AudioManager/AudioManager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=747
+window/stretch/mode="canvas_items"
+
+[editor]
+
+movie_writer/mjpeg_quality=1.0
+movie_writer/movie_file="C:/Users/guosh/Desktop/smithylegend/Video.avi"
+movie_writer/disable_vsync=true
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

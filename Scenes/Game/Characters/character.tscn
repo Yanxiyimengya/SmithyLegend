@@ -1,0 +1,277 @@
+[gd_scene load_steps=16 format=3 uid="uid://cfwukqy6q3pet"]
+
+[ext_resource type="Texture2D" uid="uid://cq2jbv55bgwn1" path="res://Graphics/Characters/villiger.png" id="1_asr38"]
+[ext_resource type="Texture2D" uid="uid://bp4s6fm6fomi8" path="res://Graphics/ParticleEffect/angry.png" id="2_4t56u"]
+[ext_resource type="Texture2D" uid="uid://bo7koufla3x7x" path="res://Graphics/UI/item_bar.png" id="2_20kdl"]
+
+[sub_resource type="GDScript" id="GDScript_8uohm"]
+script/source = "extends Control;
+
+signal exited(angry : bool);
+
+@onready var sprite_2d: Sprite2D = $Sprite2D;
+@onready var check_box: Control = $CheckBox;
+@onready var gpu_particles_2d: GPUParticles2D = $GPUParticles2D
+@onready var grid_container: GridContainer = $UI/Panel/GridContainer;
+@onready var progress_bar: ProgressBar = $UI/ProgressBar;
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+
+var SOUND_YES : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_yes1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes2.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes3.ogg\")
+];
+var SOUND_NO : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_no1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_no2.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_no3.ogg\")
+];
+
+var can_be_provided : bool = false : 
+	set(value) : 
+		can_be_provided = value;
+		$UI.visible = true;
+		var tween : Tween = create_tween(); 
+		if (value) : 
+			$UI.modulate.a = 0.0;
+			tween.tween_property($UI, \"modulate:a\", 1.0, 0.1);
+			
+		else : 
+			$UI.modulate.a = 1.0;
+			tween.tween_property($UI, \"modulate:a\", 0.0, 0.1);
+		await tween.finished;
+		$UI.visible = value;
+var mood : float = 0.0 : 
+	set(value) : 
+		mood = value;
+		$UI/ProgressBar.value = value;
+		$UI/ProgressBar.get_theme_stylebox(\"fill\").bg_color = Color.from_hsv( (100-mood)/100*0.3 ,0.5, 0.9);
+		if (value >= 100.0) : 
+			can_be_provided = false;
+			gpu_particles_2d.restart();
+			exited.emit(true);
+			AudioManager.play_suond(SOUND_NO[randi()%SOUND_NO.size()]);
+var mood_speed : float = 1.0;
+var result : Array[String] = [];
+var result_count : int = 0;
+var result_texture_rects : Array = [];
+var texture : Texture2D = null : 
+	set(value) : 
+		$Sprite2D.texture = value;
+		$Sprite2D.scale.x = 290 / $Sprite2D.get_rect().size.y;
+		$Sprite2D.scale.y = $Sprite2D.scale.x;
+		$Sprite2D.offset.y = -$Sprite2D.scale.y/2;
+		texture = value;
+var carry_emeralds_count : int = 1;
+
+func _ready() -> void : 
+	DragManager.register_object(self);
+
+func _process(delta: float) -> void : 
+	if (can_be_provided) : 
+		mood += delta * mood_speed;
+
+func _dm_can_drag(as_position : Vector2, data : Variant) : 
+	if (can_be_provided) :
+		if (data && data is Array && data.size() > 0 && data[0] == \"IngredientsDrag\") : 
+			if (check_box.get_global_rect().has_point(check_box.get_global_mouse_position())) : 
+				if (data[1] in result) : 
+					return true;
+	return false;
+
+func _dm_drop_data(data : Variant) : 
+	result_count -= 1;
+	var pos : int = result.find(data[1]);
+	var bar : Control = result_texture_rects[pos];
+	bar.provided = true;
+	
+	result_texture_rects.remove_at(pos);
+	result.remove_at(pos);
+	
+	if (SOUND_YES.size() > 0) : 
+		AudioManager.play_suond(SOUND_YES[randi() % SOUND_YES.size()]);
+	
+	if (result_count <= 0) : 
+		if (SOUND_YES.size() > 0) : 
+			AudioManager.play_suond(SOUND_YES[randi() % SOUND_YES.size()]);
+		exited.emit(false);
+
+func walk_to(pos : Vector2) : 
+	await get_tree().process_frame;
+	animation_player.play(&\"Walk\");
+	var tween : Tween = get_tree().create_tween().set_parallel();
+	tween.tween_property(self, \"global_position:y\", pos.y-30, abs(global_position.y - pos.y) / 40);
+	tween.tween_property(self, \"scale\", -Vector2(0.1, 0.1), 1).as_relative();
+	tween.chain();
+	tween.tween_property(self, \"global_position:x\", pos.x, abs(global_position.x - pos.x) / 80);
+	tween.chain();
+	tween.tween_property(self, \"global_position:y\", pos.y+30,  abs(global_position.y - pos.y) / 40);
+	tween.tween_property(self, \"scale\", Vector2(0.1, 0.1), 1).as_relative();
+	tween.chain();
+	await tween.finished;
+	animation_player.stop();
+
+const ITEM_RESULT_BAR = preload(\"res://Scenes/Game/Characters/item_result_bar.tscn\");
+func set_result(res : Array[String]) : 
+	await get_tree().process_frame;
+	result_count = res.size();
+	result = res;
+	for item_id : String in res : 
+		var bar : Control = ITEM_RESULT_BAR.instantiate();
+		grid_container.add_child(bar);
+		bar.texture = Global.item_dict[item_id][\"texture\"];
+		result_texture_rects.append(bar);
+"
+
+[sub_resource type="Animation" id="Animation_xqrma"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_gvqjs"]
+resource_name = "Walk"
+length = 0.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.166667, 0.333333),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -15), Vector2(0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_44qef"]
+_data = {
+"RESET": SubResource("Animation_xqrma"),
+"Walk": SubResource("Animation_gvqjs")
+}
+
+[sub_resource type="Curve" id="Curve_2c286"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_8adl3"]
+curve = SubResource("Curve_2c286")
+
+[sub_resource type="Curve" id="Curve_hmp4f"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.437363), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_nbg85"]
+curve = SubResource("Curve_hmp4f")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_c66qh"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(60, 120, 1)
+gravity = Vector3(0, -50, 0)
+scale_min = 3.0
+scale_max = 3.0
+scale_curve = SubResource("CurveTexture_nbg85")
+alpha_curve = SubResource("CurveTexture_8adl3")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sb3xw"]
+texture = ExtResource("2_20kdl")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mekw7"]
+texture = ExtResource("2_20kdl")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k7v"]
+resource_local_to_scene = true
+bg_color = Color(0.666667, 1, 0.5, 1)
+
+[node name="Character" type="Control"]
+y_sort_enabled = true
+layout_mode = 3
+anchors_preset = 0
+script = SubResource("GDScript_8uohm")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = -1
+y_sort_enabled = true
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("1_asr38")
+offset = Vector2(0, -250)
+
+[node name="CheckBox" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -83.0
+offset_top = -293.0
+offset_right = 82.0
+offset_bottom = -100.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_44qef")
+}
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+position = Vector2(-3, -182)
+emitting = false
+amount = 15
+process_material = SubResource("ParticleProcessMaterial_c66qh")
+texture = ExtResource("2_4t56u")
+lifetime = 3.0
+one_shot = true
+preprocess = 1.0
+
+[node name="UI" type="Control" parent="."]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+layout_mode = 2
+offset_left = 55.0
+offset_top = -288.0
+offset_right = 65.0
+offset_bottom = -278.0
+scale = Vector2(1.25, 1.25)
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_sb3xw")
+
+[node name="GridContainer" type="GridContainer" parent="UI/Panel"]
+layout_mode = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+
+[node name="ProgressBar" type="ProgressBar" parent="UI"]
+layout_mode = 2
+offset_left = -65.0
+offset_top = -242.0
+offset_right = -55.0
+offset_bottom = -132.0
+size_flags_vertical = 1
+theme_override_styles/background = SubResource("StyleBoxTexture_mekw7")
+theme_override_styles/fill = SubResource("StyleBoxFlat_q3k7v")
+fill_mode = 3
+show_percentage = false

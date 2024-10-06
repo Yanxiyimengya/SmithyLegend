@@ -1,0 +1,88 @@
+[gd_scene load_steps=6 format=3 uid="uid://dudkypjohrv0r"]
+
+[ext_resource type="Texture2D" uid="uid://c3d6b8574icjw" path="res://Graphics/Item/Iron/raw_iron.png" id="1_tqjko"]
+
+[sub_resource type="GDScript" id="GDScript_xnlbu"]
+script/source = "extends Node2D;
+
+signal finshed;
+
+@onready var gpu_particles_2d: GPUParticles2D = $GPUParticles2D;
+@onready var item_sprite: Sprite2D = $\"ItemSprite\";
+
+var start_position : Vector2 = Vector2.ZERO;
+var target_position : Vector2 = Vector2.ZERO;
+var control_point : Vector2 = Vector2.ZERO;
+var process : float= 0.0;
+var speed : float = 0.02;
+var acceleration : float = 0.0;
+var rotation_speed : float = 0.1;
+
+var texture : Texture = null : 
+	set(value) : 
+		texture = value;
+		$ItemSprite.texture = value;
+	get : 
+		return $ItemSprite.texture;
+
+func _process(delta: float) -> void:
+	if (process <= 1.0) : 
+		process += speed * delta;
+		if (process > 0.5) : acceleration += 0.005 * delta;
+		else : acceleration -= 0.005 * delta;
+		speed += acceleration * 100 * delta;
+		
+		var l1 =  lerp(start_position, control_point, process);
+		var l2 =  lerp(control_point, target_position, process);
+		global_position = lerp(l1, l2, process);
+		global_rotation += rotation_speed * delta;
+	else : 
+		set_process(false);
+		gpu_particles_2d.emitting = true;
+		finshed.emit();
+		var tween : Tween = get_tree().create_tween();
+		tween.bind_node(self);
+		tween.tween_property(item_sprite, \"scale\", Vector2.ZERO, 0.2);
+		tween.tween_property(item_sprite, \"modulate:a\", 0.0, 0.2);
+		
+		await gpu_particles_2d.finished;
+		self.queue_free();
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_c0wwd"]
+particles_animation = true
+particles_anim_h_frames = 7
+particles_anim_v_frames = 1
+particles_anim_loop = true
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_c6c5s"]
+emission_shape_scale = Vector3(2, 1, 1)
+emission_shape = 3
+emission_box_extents = Vector3(2, 2, 1)
+radial_velocity_min = 7.99998
+radial_velocity_max = 16.0
+gravity = Vector3(0, -20, 0)
+scale_min = 2.0
+scale_max = 2.0
+anim_speed_max = 1.0
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_wo3u2"]
+load_path = "res://.godot/imported/generic.png-d0d5f3ba5a1938e369e0ca654be8cbae.ctex"
+
+[node name="Item" type="Node2D"]
+scale = Vector2(3, 3)
+script = SubResource("GDScript_xnlbu")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+texture_filter = 1
+material = SubResource("CanvasItemMaterial_c0wwd")
+emitting = false
+process_material = SubResource("ParticleProcessMaterial_c6c5s")
+texture = SubResource("CompressedTexture2D_wo3u2")
+one_shot = true
+preprocess = 0.5
+visibility_rect = Rect2(-128.48, -100, 200, 200)
+
+[node name="ItemSprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("1_tqjko")

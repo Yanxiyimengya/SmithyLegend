@@ -1,0 +1,63 @@
+[gd_scene load_steps=6 format=3 uid="uid://rg0lxymowunk"]
+
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="1_1h5sh"]
+
+[sub_resource type="Shader" id="Shader_03ldp"]
+code = "shader_type canvas_item;
+void fragment() {
+	COLOR = texture(TEXTURE, UV);
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lkgkj"]
+shader = SubResource("Shader_03ldp")
+
+[sub_resource type="GDScript" id="GDScript_sjx50"]
+script/source = "extends TextureRect
+@onready var target_item_number: Label = $TargetItemNumber;
+
+var item_type : String = \"\" : 
+	set(value) : 
+		if (Global.item_dict.has(value)) : 
+			texture = Global.item_dict[value][\"texture\"];
+		else : texture = null;
+		item_type = value;
+
+var item_count : int = 0 : 
+	set(value) : 
+		item_count = value;
+		target_item_number.visible = (value > 1);
+		target_item_number.text = str(value);
+		if (value < 1) :
+			item_type = \"\";
+			item_count = 0;
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_dqmcl"]
+font = ExtResource("1_1h5sh")
+font_size = 240
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[node name="CreaftingTableSlot" type="TextureRect"]
+material = SubResource("ShaderMaterial_lkgkj")
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = SubResource("GDScript_sjx50")
+
+[node name="TargetItemNumber" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "0"
+label_settings = SubResource("LabelSettings_dqmcl")
+horizontal_alignment = 2
+vertical_alignment = 2

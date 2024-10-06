@@ -1,0 +1,67 @@
+[gd_scene load_steps=4 format=3 uid="uid://c7n0juspclyhv"]
+
+[ext_resource type="Texture2D" uid="uid://cdc6p81i0fo2k" path="res://Graphics/UI/ui.png" id="1_rdpew"]
+
+[sub_resource type="GDScript" id="GDScript_402bw"]
+script/source = "extends Control;
+
+signal select_item(item_id : Variant);
+
+const ITEM_BAR = preload(\"res://Scenes/Game/ItemBar/item_bar.tscn\");
+
+var item_dict : Dictionary = {};
+
+func add_item_bar(item_id : Variant, item_display_name : String) : 
+	var bar : Node = ITEM_BAR.instantiate();
+	bar.texture = Global.item_dict[item_id][\"texture\"];
+	bar.text = item_display_name;
+	item_dict[item_id] = bar;
+	$Panel/VBoxContainer.add_child(bar);
+	bar.gui_input.connect(func(event: InputEvent) :
+		if (event is InputEventMouseButton) : 
+			if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
+				select_item.emit(item_id);
+		);
+"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4b8ot"]
+texture = ExtResource("1_rdpew")
+texture_margin_left = 5.0
+texture_margin_top = 18.0
+texture_margin_right = 5.0
+texture_margin_bottom = 10.0
+expand_margin_left = 5.0
+expand_margin_top = 18.0
+expand_margin_right = 5.0
+expand_margin_bottom = 10.0
+
+[node name="ItemBar" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_402bw")
+
+[node name="Panel" type="Panel" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_4b8ot")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = -1.0
+grow_horizontal = 2
+grow_vertical = 2

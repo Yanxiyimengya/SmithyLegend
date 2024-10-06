@@ -1,0 +1,13 @@
+res://Scenes/Game/game.tscn
+res://Shaders/chopping_block.gdshader
+res://Shaders/perspective.gdshader
+res://Shaders/gama.gdshader
+res://Scenes/StartMenus/shop_menu.tscn
+res://Scenes/StartMenus/shop_button.tscn
+res://Scenes/StartMenus/start_menu_2.tscn
+res://Scenes/StartMenus/main_menu.tscn
+res://Scenes/DragManager/DragManager.tscn
+res://Scenes/Game/Characters/character.tscn
+res://Scenes/Game/Effect/emerald_effect.tscn
+res://Scenes/Game/Effect/item_add_effect.tscn
+res://Scenes/StartMenus/StartMenuBGM2Lyric.gd
