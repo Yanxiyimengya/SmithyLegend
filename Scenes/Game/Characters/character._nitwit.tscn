@@ -1,0 +1,232 @@
+[gd_scene load_steps=16 format=3 uid="uid://dxeb3v08go6tl"]
+
+[ext_resource type="Texture2D" uid="uid://14pu6n81objm" path="res://Graphics/Characters/Nitwit/nitwit_body.png" id="2_b5mpb"]
+[ext_resource type="Texture2D" uid="uid://mkgh1lwi1nfk" path="res://Graphics/Characters/Nitwit/nitwit_head_normal.png" id="3_akvjx"]
+[ext_resource type="Texture2D" uid="uid://bp4s6fm6fomi8" path="res://Graphics/ParticleEffect/angry.png" id="3_qhdwd"]
+[ext_resource type="Texture2D" uid="uid://b7gdstcttjpqm" path="res://Graphics/Characters/Nitwit/nitwit_head_shake.png" id="3_xbtrx"]
+[ext_resource type="PackedScene" uid="uid://34q0h8ndhne8" path="res://Scenes/Game/Characters/item_result_ui.tscn" id="4_qmo2p"]
+
+[sub_resource type="GDScript" id="GDScript_q3pqx"]
+script/source = "extends Character;
+
+var escaping : bool = false;
+
+func _ready() -> void : 
+	DragManager.register_object(self);
+
+func _process(delta: float) -> void : 
+	if (can_be_provided) : 
+		mood += delta * mood_speed;
+
+func _dm_can_drag(as_position : Vector2, data : Variant) : 
+	if (can_be_provided) :
+		if (data && data is Array && data.size() > 0 && data[0] == \"IngredientsDrag\") : 
+			if (check_box.get_global_rect().has_point(check_box.get_global_mouse_position())) : 
+				if (data[1] in result) : 
+					return true;
+	return false;
+
+func _dm_drop_data(data : Variant) : 
+	ui.complate_item(data[1]);
+	if (SOUND_YES.size() > 0) : 
+		AudioManager.play_global_audio(SOUND_YES[randi() % SOUND_YES.size()]);
+	if (ui.result_count <= 0) : 
+		escaping = true;
+		exited.emit();
+
+func walk_to(pos : Vector2) : 
+	await get_tree().process_frame;
+	moveing_tween = check_box.create_tween().set_parallel();
+	animation_player.play(&\"Walk\");
+	moveing_tween.tween_property(self, \"global_position:y\", pos.y-30, abs(global_position.y - pos.y) / 40);
+	moveing_tween.tween_property(self, \"scale\", -Vector2(0.1, 0.1), 1).as_relative();
+	moveing_tween.chain();
+	moveing_tween.tween_property(self, \"global_position:x\", pos.x, abs(global_position.x - pos.x) / 80);
+	moveing_tween.chain();
+	moveing_tween.tween_property(self, \"global_position:y\", pos.y+30,  abs(global_position.y - pos.y) / 40);
+	moveing_tween.tween_property(self, \"scale\", Vector2(0.1, 0.1), 1).as_relative();
+	moveing_tween.chain();
+	await moveing_tween.finished;
+	animation_player.stop();
+
+func _on_check_box_gui_input(event: InputEvent) -> void : 
+	if (escaping) : 
+		if (event is InputEventScreenTouch && event.is_pressed()) :
+			AudioManager.play_global_audio(SOUND_YES[randi() % SOUND_YES.size()]);
+			escaping = false;
+			payed.emit();
+			check_box.process_mode = PROCESS_MODE_DISABLED;
+			animation_player.play(&\"ShakeHead\");
+			await animation_player.animation_finished;
+			check_box.process_mode = PROCESS_MODE_ALWAYS;
+			animation_player.play(&\"Walk\");
+"
+
+[sub_resource type="Animation" id="Animation_xqrma"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D/NitwitHeadNormal:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D/NitwitHeadNormal:texture")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("3_akvjx")]
+}
+
+[sub_resource type="Animation" id="Animation_bguah"]
+resource_name = "ShakeHead"
+length = 1.4
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D/NitwitHeadNormal:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0001, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.0, 0.0, -0.0698132, 0.0698132, -0.0698132, 0.0698132, -0.0698132, 0.0698132, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D/NitwitHeadNormal:texture")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [ExtResource("3_xbtrx"), ExtResource("3_akvjx")]
+}
+
+[sub_resource type="Animation" id="Animation_gvqjs"]
+resource_name = "Walk"
+length = 0.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.166667, 0.333333),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -15), Vector2(0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_44qef"]
+_data = {
+"RESET": SubResource("Animation_xqrma"),
+"ShakeHead": SubResource("Animation_bguah"),
+"Walk": SubResource("Animation_gvqjs")
+}
+
+[sub_resource type="Curve" id="Curve_2c286"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_8adl3"]
+curve = SubResource("Curve_2c286")
+
+[sub_resource type="Curve" id="Curve_hmp4f"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.437363), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_nbg85"]
+curve = SubResource("Curve_hmp4f")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_c66qh"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(60, 120, 1)
+gravity = Vector3(0, -50, 0)
+scale_min = 3.0
+scale_max = 3.0
+scale_curve = SubResource("CurveTexture_nbg85")
+alpha_curve = SubResource("CurveTexture_8adl3")
+
+[node name="Nitwit" type="Control" node_paths=PackedStringArray("check_box", "gpu_particles_2d", "animation_player", "ui")]
+y_sort_enabled = true
+layout_mode = 3
+anchors_preset = 0
+script = SubResource("GDScript_q3pqx")
+check_box = NodePath("CheckBox")
+gpu_particles_2d = NodePath("GPUParticles2D")
+animation_player = NodePath("AnimationPlayer")
+ui = NodePath("UI")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("2_b5mpb")
+offset = Vector2(0, -250)
+
+[node name="NitwitHeadNormal" type="Sprite2D" parent="Sprite2D"]
+position = Vector2(0, -313.333)
+scale = Vector2(1.66667, 1.66667)
+texture = ExtResource("3_akvjx")
+offset = Vector2(0, -55)
+
+[node name="CheckBox" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -83.0
+offset_top = -293.0
+offset_right = 82.0
+offset_bottom = -100.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_44qef")
+}
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+position = Vector2(-3, -182)
+emitting = false
+amount = 15
+process_material = SubResource("ParticleProcessMaterial_c66qh")
+texture = ExtResource("3_qhdwd")
+lifetime = 3.0
+one_shot = true
+preprocess = 1.0
+
+[node name="UI" parent="." instance=ExtResource("4_qmo2p")]
+visible = false
+z_index = 1
+y_sort_enabled = true
+offset_top = -223.0
+offset_bottom = -183.0
+
+[connection signal="gui_input" from="CheckBox" to="." method="_on_check_box_gui_input"]

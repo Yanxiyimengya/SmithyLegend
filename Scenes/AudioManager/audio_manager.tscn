@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://b0x7txcg2gnpv"]
+
+[ext_resource type="Script" path="res://Scenes/AudioManager/AudioManager.gd" id="1_vp5ui"]
+
+[sub_resource type="AudioStreamPolyphonic" id="AudioStreamPolyphonic_ndait"]
+
+[node name="AudioManager" type="Node"]
+script = ExtResource("1_vp5ui")
+
+[node name="GlobalAudioPlayer" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamPolyphonic_ndait")

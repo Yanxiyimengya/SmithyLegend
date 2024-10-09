@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsceemh0u0acc"
-path="res://.godot/imported/IronWorkerSide.png-4b237b8734bb50931cf3f0090653773d.ctex"
+uid="uid://k7aghflngwt4"
+path="res://.godot/imported/stonecutter_top.png-f7d46b8bc19290f919983ece0450ad77.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Graphics/IronWorker/IronWorkerSide.png"
-dest_files=["res://.godot/imported/IronWorkerSide.png-4b237b8734bb50931cf3f0090653773d.ctex"]
+source_file="res://Graphics/BlockTexture/stonecutter_top.png"
+dest_files=["res://.godot/imported/stonecutter_top.png-f7d46b8bc19290f919983ece0450ad77.ctex"]
 
 [params]
 
@@ -21,7 +21,7 @@ compress/lossy_quality=0.7
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -31,4 +31,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

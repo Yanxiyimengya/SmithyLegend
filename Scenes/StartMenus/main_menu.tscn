@@ -20,8 +20,8 @@ func _ready() -> void:
 	day_count.text = str(Global.day);
 
 func _on_furnace_button_pressed() -> void:
-	SceneManager.change_scene_form_file(\"res://Scenes/Game/game.tscn\");
-	AudioManager.play_suond(CLICK_SOUND);
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(preload(\"res://Scenes/Game/game.tscn\"));
 func _on_furnace_button_mouse_entered() -> void:
 	get_tree().create_tween().tween_property($FurnaceEffectHightLightPolygon, \"color:a\", 0.2, 0.05);
 func _on_furnace_button_mouse_exited() -> void:
@@ -29,16 +29,16 @@ func _on_furnace_button_mouse_exited() -> void:
 
 
 func _on_girnd_button_pressed() -> void:
-	SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/shop_menu.tscn\");
-	AudioManager.play_suond(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/shop_menu.tscn\"));
+	AudioManager.play_global_audio(CLICK_SOUND);
 func _on_girnd_button_mouse_entered() -> void:
 	get_tree().create_tween().tween_property($GirndStoneHightLightPolygon, \"color:a\", 0.2, 0.05);
 func _on_girnd_button_mouse_exited() -> void:
 	get_tree().create_tween().tween_property($GirndStoneHightLightPolygon, \"color:a\", 0.0, 0.05);
 
 func _on_exit_button_pressed() -> void:
-	AudioManager.play_suond(CLICK_SOUND);
-	SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/start_menu_2.tscn\");
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/start_menu_2.tscn\"));
 "
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6csjn"]

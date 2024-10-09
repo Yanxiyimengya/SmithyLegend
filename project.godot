@@ -20,7 +20,7 @@ config/icon="res://icon.png"
 SceneManager="*res://Scenes/SceneManager/SceneManager.tscn"
 DragManager="*res://Scenes/DragManager/DragManager.tscn"
 Global="*res://Scenes/Global/Global.tscn"
-AudioManager="*res://Scenes/AudioManager/AudioManager.gd"
+AudioManager="*res://Scenes/AudioManager/audio_manager.tscn"
 
 [display]
 

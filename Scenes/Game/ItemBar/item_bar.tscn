@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://drmxukacs1pxt"]
 
 [ext_resource type="Texture2D" uid="uid://bo7koufla3x7x" path="res://Graphics/UI/item_bar.png" id="1_gy6bi"]
-[ext_resource type="Texture2D" uid="uid://c3d6b8574icjw" path="res://Graphics/Item/Iron/raw_iron.png" id="2_hnnd6"]
+[ext_resource type="Texture2D" uid="uid://cwi7yi07m1nt3" path="res://Graphics/Item/Block/plank.png" id="2_r62d4"]
 [ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_r1qcw"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hvwpm"]
@@ -45,7 +45,7 @@ script = SubResource("GDScript_3ejjn")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 5
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
 layout_mode = 2
@@ -53,11 +53,9 @@ theme_override_constants/margin_left = 5
 
 [node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer"]
 layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-texture = ExtResource("2_hnnd6")
+texture = ExtResource("2_r62d4")
+expand_mode = 3
 
 [node name="Label" type="Label" parent="HBoxContainer"]
 layout_mode = 2
-text = "生铁"
 label_settings = SubResource("LabelSettings_7th3v")

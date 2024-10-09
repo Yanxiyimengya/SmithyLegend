@@ -18,7 +18,7 @@ func _ready() -> void:
 		set_upgrade(item, upgrade_list[item]);
 	
 	## 基础配方
-	register_recipe("plank", ["log"], 2, false);
+	register_recipe("plank", ["log"], 4, false);
 	# 原木 -> 木板
 	register_recipe("stick", ["plank", "", "", "plank", "", ""], 2, true);
 	# 木板 -> 木棍
@@ -46,7 +46,7 @@ func set_update_effect(item:  String, level : int) :
 			if (level > 0) : GameInitializer.append_diamond_props_recipes();
 			if (level > 1) : GameInitializer.append_diamond_recipes();
 		"log_quick_filling" : 
-			log_filling_time = 0.5;
+			log_filling_time *= 0.5;
 
 #endregion
 const save_path : String = "user://save.json";

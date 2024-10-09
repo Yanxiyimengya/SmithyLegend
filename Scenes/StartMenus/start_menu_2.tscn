@@ -32,6 +32,8 @@ func _ready() -> void :
 	SceneManager.out_shot = load(\"res://Scenes/SceneManager/Shots/Filter/FilterExit.tscn\");
 	await get_tree().create_timer(0.3);
 	animation_player.play(&\"Default\");
+	
+	audio_stream_player.play();
 
 func _process(delta: float) -> void:
 	if (startting) : return;
@@ -51,7 +53,6 @@ func _process(delta: float) -> void:
 			tween.tween_property(lyric_lable, \"scale\", Vector2.ONE * 3, 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
 			tween.tween_property(lyric_lable, \"pivot_offset\", lyric_lable.size / 2 + Vector2(randf_range(-20,20),randf_range(-10,10)), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
 	
-	
 	if (!dragging) : 
 		if (process > 0.0) : 
 			fall_speed += delta * 2500;
@@ -59,8 +60,7 @@ func _process(delta: float) -> void:
 	process = clamp(process, 0.0, 300.0);
 	door.position.y = -process;
 
-func _input(event: InputEvent) -> void:
-	
+func _input(event: InputEvent) -> void :
 	if (startting) : return;
 	if (event is InputEventMouseButton) : 
 		if (dool_control.get_rect().has_point(event.global_position) && event.button_mask == MOUSE_BUTTON_MASK_LEFT) : 
@@ -72,8 +72,7 @@ func _input(event: InputEvent) -> void:
 			if (process > 290) : 
 				animation_player.play(&\"Starting\");
 				startting = true;
-				SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/main_menu.tscn\");
-				await SceneManager.change_scene_finished;
+				SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/main_menu.tscn\"));
 	elif (dragging && event is InputEventMouseMotion) : 
 		if (event.button_mask == MOUSE_BUTTON_MASK_LEFT) : 
 			process -= event.relative.y;
@@ -265,7 +264,6 @@ libraries = {
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("1_t5j8v")
-autoplay = true
 parameters/looping = false
 
 [node name="Timer" type="Timer" parent="."]

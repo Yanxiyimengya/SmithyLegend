@@ -3,21 +3,19 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dluoq2dnai6g7"
-path.s3tc="res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.s3tc.ctex"
-path.etc2="res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.etc2.ctex"
+path="res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
 source_file="res://Graphics/BlockTexture/smooth_stone.png"
-dest_files=["res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.s3tc.ctex", "res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.etc2.ctex"]
+dest_files=["res://.godot/imported/smooth_stone.png-82a32e045350403bbe669e61fc285145.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1

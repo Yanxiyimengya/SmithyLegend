@@ -1,0 +1,94 @@
+[gd_scene load_steps=6 format=3 uid="uid://34q0h8ndhne8"]
+
+[ext_resource type="Texture2D" uid="uid://bo7koufla3x7x" path="res://Graphics/UI/item_bar.png" id="1_kgxk3"]
+
+[sub_resource type="GDScript" id="GDScript_p0bsl"]
+script/source = "extends Control;
+@onready var progress_bar: ProgressBar = $ProgressBar;
+@onready var grid_container: GridContainer = $Panel/GridContainer;
+
+var item_result_bars : Array[Node] = [];
+var result_count : int = 0;
+
+var mood : float = 0.0 : 
+	set(value) : 
+		mood = value;
+		progress_bar.value = value;
+		progress_bar.get_theme_stylebox(\"fill\").bg_color = Color.from_hsv( (100-mood)/100*0.3 ,0.5, 0.9);
+
+const ITEM_RESULT_BAR = preload(\"res://Scenes/Game/Characters/item_result_bar.tscn\");
+func set_result(res : Array[String]) : 
+	await get_tree().process_frame;
+	result_count = res.size();
+	for item_id : String in res : 
+		var bar : Control = ITEM_RESULT_BAR.instantiate();
+		bar.item_type = item_id;
+		bar.texture = Global.item_dict[item_id][\"texture\"];
+		item_result_bars.append(bar);
+		grid_container.add_child(bar);
+
+func complate_item(item_id : String) : 
+	for bar : Node in item_result_bars : 
+		if (bar.item_type == item_id) : 
+			bar.provided = true;
+			result_count -= 1;
+			item_result_bars.erase(bar);
+			break;
+		
+"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sb3xw"]
+texture = ExtResource("1_kgxk3")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mekw7"]
+texture = ExtResource("1_kgxk3")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k7v"]
+resource_local_to_scene = true
+bg_color = Color(0.666667, 1, 0.5, 1)
+
+[node name="UI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = SubResource("GDScript_p0bsl")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 58.0
+offset_top = -71.0
+offset_right = 68.0
+offset_bottom = -61.0
+scale = Vector2(1.25, 1.25)
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_sb3xw")
+
+[node name="GridContainer" type="GridContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+layout_mode = 2
+offset_left = -70.0
+offset_top = -25.0
+offset_right = -60.0
+offset_bottom = 85.0
+size_flags_vertical = 1
+theme_override_styles/background = SubResource("StyleBoxTexture_mekw7")
+theme_override_styles/fill = SubResource("StyleBoxFlat_q3k7v")
+fill_mode = 3
+show_percentage = false

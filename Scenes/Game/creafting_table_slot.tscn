@@ -1,19 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://rg0lxymowunk"]
+[gd_scene load_steps=4 format=3 uid="uid://rg0lxymowunk"]
 
 [ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="1_1h5sh"]
-
-[sub_resource type="Shader" id="Shader_03ldp"]
-code = "shader_type canvas_item;
-void fragment() {
-	COLOR = texture(TEXTURE, UV);
-}"
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lkgkj"]
-shader = SubResource("Shader_03ldp")
 
 [sub_resource type="GDScript" id="GDScript_sjx50"]
 script/source = "extends TextureRect
 @onready var target_item_number: Label = $TargetItemNumber;
+@onready var color_rect: ColorRect = $ColorRect;
+
+var example : bool = false;
 
 var item_type : String = \"\" : 
 	set(value) : 
@@ -30,6 +24,18 @@ var item_count : int = 0 :
 		if (value < 1) :
 			item_type = \"\";
 			item_count = 0;
+
+func set_example(enable : bool, example_id : String = \"\") : 
+	if (item_type != \"\") : return;
+	example = enable;
+	color_rect.visible = false;
+	self_modulate.a = 0.5 if(enable)else(1);
+	if (enable) : 
+		if (Global.item_dict.has(example_id)) : 
+			texture = Global.item_dict[example_id][\"texture\"];
+			color_rect.visible = true;
+	else : 
+		texture = null;
 "
 
 [sub_resource type="LabelSettings" id="LabelSettings_dqmcl"]
@@ -40,7 +46,11 @@ shadow_color = Color(0, 0, 0, 1)
 shadow_offset = Vector2(2, 2)
 
 [node name="CreaftingTableSlot" type="TextureRect"]
-material = SubResource("ShaderMaterial_lkgkj")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = SubResource("GDScript_sjx50")
@@ -53,11 +63,22 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -24.0
+offset_left = -180.0
+offset_top = -240.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "0"
 label_settings = SubResource("LabelSettings_dqmcl")
 horizontal_alignment = 2
 vertical_alignment = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.55, 0.55, 0.305882)

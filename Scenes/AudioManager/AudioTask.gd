@@ -44,6 +44,7 @@ func play(from_pos : float = 0.0) -> void:
 	player_node.play(from_pos);
 	volume = 1.0;
 	pitch = 1.0;
+	looping = false;
 	bus = &"Master";
 	player_node.process_mode = Node.PROCESS_MODE_ALWAYS;
 

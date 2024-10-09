@@ -23,7 +23,7 @@ var target_position : Vector2 = Vector2.ZERO;
 var control_point : Vector2 = Vector2.ZERO;
 var process : float= 0.0;
 var speed : float = 0.5;
-var acceleration : float = 0.0006;
+var acceleration : float = 0.0003;
 var time_scale : float = 1.0;
 
 func _ready() -> void:
@@ -38,7 +38,7 @@ func _process(delta: float) -> void:
 	y_rot += delta * 180;
 	if (process <= 1.0) : 
 		process += speed * delta * time_scale;
-		speed -= acceleration * time_scale;
+		speed -= acceleration * time_scale * delta;
 		var l1 =  lerp(start_position, control_point, process);
 		var l2 =  lerp(control_point, target_position, process);
 		global_position = lerp(l1, l2, process);

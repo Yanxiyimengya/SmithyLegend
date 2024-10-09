@@ -18,11 +18,24 @@ script/source = "extends Control;
 @onready var emerald_texture_sprite : TextureRect = $CanvasLayer/HBoxContainer2/CenterContainer/TextureRect;
 
 var target_item_updrade_data : UpgradeItem = null;
+var page_list : Array[Control] = [];
+
+var page1 : int = create_page();
+var page2 : int = create_page();
+var currect_page = -1;
+
+const SOUND_YES : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_yes1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes2.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes3.ogg\")
+];
 
 func _ready() -> void:
+	open_page(page1);
+	
 	var iron_upgrade : UpgradeItem = UpgradeItem.new(\"iron_upgrade\");
 	iron_upgrade.append(\"铁匠进阶\", preload(\"res://Graphics/Item/Iron/iron_pickaxe.png\"), \\
-		50, \"这个升级能够让你制作铁制工具\\r顾客会要求你提供新的道具\");
+		75, \"这个升级能够让你制作铁制工具\\r顾客会要求你提供新的道具\");
 	iron_upgrade.append(\"高阶铁匠技术\", preload(\"res://Graphics/Item/Iron/iron_chestplate.png\"), \\
 		300, \"这个升级能够让你制作铁制装备\\r顾客会要求你提供新的道具\");
 	# 铁匠工艺大师
@@ -35,34 +48,53 @@ func _ready() -> void:
 	
 	var diamond_upgrade : UpgradeItem = UpgradeItem.new(\"diamond_upgrade\");
 	diamond_upgrade.append(\"钻石矿工\", preload(\"res://Graphics/Item/Diamond/diamond.png\"), \\
-		1800, \"这个升级能够让你采掘钻石\\r顾客会要求你提供新的道具\");
+		2100, \"这个升级能够让你采掘钻石\\r顾客会要求你提供新的道具\");
 	diamond_upgrade.append(\"珠宝匠人\", preload(\"res://Graphics/Item/Diamond/diamond_sword.png\"), \\
-		2600, \"这个升级能够让你制作钻石装备\\r顾客会要求你提供新的道具\");
+		3000, \"这个升级能够让你制作钻石装备\\r顾客会要求你提供新的道具\");
 	
-	create_button(iron_upgrade, Vector2(110, 500));
-	create_button(gold_upgrade, Vector2(280, 450));
-	create_button(diamond_upgrade, Vector2(430, 480));
+	create_button(iron_upgrade, Vector2(110, 500), page1);
+	create_button(gold_upgrade, Vector2(280, 450), page1);
+	create_button(diamond_upgrade, Vector2(430, 480), page1);
 	
 	var furnace_append : UpgradeItem = UpgradeItem.new(\"furnace_append\");
-	furnace_append.append(\"熔炉\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
-		150, \"购置一个新熔炉, 工作效率翻倍\");
-	furnace_append.append(\"熔炉\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
-		900, \"两个熔炉还不够, 再新增一个或许更好\");
-	furnace_append.append(\"熔炉\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+	furnace_append.append(\"熔炉x2\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+		50, \"购置一个新熔炉, 工作效率翻倍\");
+	furnace_append.append(\"熔炉x3\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+		500, \"两个熔炉还不够, 再新增一个或许更好\");
+	furnace_append.append(\"熔炉x4\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
 		900, \"火力全开! 让你同时拥有4个熔炉\");
 	
 	var log_quick_filling : UpgradeItem = UpgradeItem.new(\"log_quick_filling\");
 	log_quick_filling.append(\"快速装填\", preload(\"res://Graphics/Item/Block/log.png\"), \\
 		75, \"调度你的伐木工,加速木材的填充速度\");
+	log_quick_filling.append(\"急速装填\", preload(\"res://Graphics/Item/Block/log.png\"), \\
+		400, \"去工作!终于不用等很久了\");
 	
 	var furnace_upgrade : UpgradeItem = UpgradeItem.new(\"furnace_upgrade\");
 	furnace_upgrade.append(\"高炉\", preload(\"res://Graphics/Item/Block/blast_furnace.png\"), \\
 		2000, \"将你的熔炉升级为高炉,将融化矿物的时间是缩减至原先的一半\");
 	
-	create_button(log_quick_filling, Vector2(875, 460));
-	create_button(furnace_upgrade, Vector2(1000, 500));
-	create_button(furnace_append, Vector2(1125, 475));
-static var a = 10;
+	create_button(log_quick_filling, Vector2(875, 460), page1);
+	create_button(furnace_upgrade, Vector2(1000, 500), page1);
+	create_button(furnace_append, Vector2(1125, 475), page1);
+	
+	
+	## page2
+	var slashers_upgrade : UpgradeItem = UpgradeItem.new(\"slashers_upgrade\");
+	slashers_upgrade.append(\"锯木机\", preload(\"res://Graphics/Item/Block/slashers.png\"), \\
+		1000, \"忘记你的手臂!\\r术业有专攻,锯木机能够自动帮你锯木材\");
+	
+	var ironworker_upgrade : UpgradeItem = UpgradeItem.new(\"ironworker_upgrade\");
+	ironworker_upgrade.append(\"培训\", preload(\"res://Graphics/Item/light_block.png\"), \\
+		4000, \"不能再躺平了!培训一下这个慵懒的铁匠, 让它知道你究竟需要什么东西\");
+	
+	var knowledge_book : UpgradeItem = UpgradeItem.new(\"knowledge_book\");
+	knowledge_book.append(\"培训\", preload(\"res://Graphics/Item/knowledge_book.png\"), \\
+		700, \"这本书充满知识, 能够记录你在一局内制作的物品合成配方\");
+	
+	create_button(ironworker_upgrade, Vector2(110, 500), page2);
+	create_button(slashers_upgrade, Vector2(280, 450), page2);
+	create_button(knowledge_book, Vector2(430, 480), page2);
 
 class UpgradeItem : 
 	var item_list : Array[Dictionary] = [];
@@ -107,21 +139,49 @@ class UpgradeItem :
 		item_button.text = item_list[upgrade_count][\"display_text\"];
 		item_button.texture = item_list[upgrade_count][\"display_texture\"];
 
-func create_button(upgrade_item_data : UpgradeItem , pos : Vector2) : 
+@onready var page_next_button: TextureButton = $CanvasLayer/HBoxContainer3/PageNextButton;
+@onready var page_back_button: TextureButton = $CanvasLayer/HBoxContainer3/PageBackButton;
+func open_page(id : int) : 
+	for p : Control in page_list : 
+		p.visible = false;
+	page_list[id].visible = true;
+	if (currect_page != id) : 
+		currect_page = id;
+		set_target_upgrade_item(null);
+	
+	page_back_button.visible = true;
+	page_next_button.visible = true;
+	if (id >= page_list.size()-1) : 
+		page_next_button.visible = false;
+	if (id <= 0) : 
+		page_back_button.visible = false;
+
+func create_page() -> int : 
+	var page_node : Control = Control.new();
+	page_node.mouse_filter = Control.MOUSE_FILTER_IGNORE;
+	add_child(page_node);
+	page_list.append(page_node);
+	return page_list.size() - 1;
+
+func create_button(upgrade_item_data : UpgradeItem , pos : Vector2, page : int = -1) : 
 	var button : BaseButton = upgrade_item_data.create_button(pos);
 	if (button) : 
 		button.signal_button_pressed.connect(set_target_upgrade_item);
-		self.add_child(button);
+		if (page > -1) : 
+			page_list[page].add_child(button);
+		else : 
+			self.add_child(button);
 
 func set_target_upgrade_item(item : UpgradeItem) : 
 	if (item == null || item.upgrade_count >= item.item_list.size()) : 
 		description_label.text = \"\";
 		value_label.text = \"\";
 		buy_button.disabled = true;
-		item.item_button.disabled = true;
 		emerald_texture_sprite.hide();
+		if (item != null) : 
+			item.item_button.disabled = true;
 		return;
-	AudioManager.play_suond(CLICK_SOUND);
+	AudioManager.play_global_audio(CLICK_SOUND);
 	description_label.text = item.item_list[item.upgrade_count][\"description\"];
 	value_label.text = str(item.item_list[item.upgrade_count][\"value\"]);
 	buy_button.disabled = (Global.emerald_count - item.item_list[item.upgrade_count][\"value\"]) < 0;
@@ -129,12 +189,14 @@ func set_target_upgrade_item(item : UpgradeItem) :
 	target_item_updrade_data = item;
 
 func _on_buy_button_pressed() -> void : 
-	AudioManager.play_suond(CLICK_SOUND);
+	AudioManager.play_global_audio(CLICK_SOUND);
+	AudioManager.play_global_audio(SOUND_YES[randi() % SOUND_YES.size()]);
 	if (target_item_updrade_data == null) : return;
 	if (target_item_updrade_data.upgrade_count < target_item_updrade_data.item_list.size()) : 
 		Global.emerald_count -= target_item_updrade_data.item_list[target_item_updrade_data.upgrade_count][\"value\"];
 		target_item_updrade_data.upgrade_count += 1;
 		Global.set_upgrade(target_item_updrade_data.item_id, target_item_updrade_data.upgrade_count);
+		Global.save_game();
 	else : 
 		target_item_updrade_data.item_button.disabled = true;
 		target_item_updrade_data = null;
@@ -143,13 +205,14 @@ func _on_buy_button_pressed() -> void :
 
 const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
 func _on_exit_button_pressed() -> void:
-	AudioManager.play_suond(CLICK_SOUND);
-	SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/main_menu.tscn\");
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/main_menu.tscn\"));
 "
 
 [sub_resource type="GDScript" id="GDScript_2d2tk"]
 script/source = "extends CanvasLayer;
 @onready var emerald_count_label: Label = $HBoxContainer/EmeraldCountLabel;
+@onready var shop_menu: Control = $\"..\";
 
 var emerald_count : float = 0.0;
 var label_emerald_count : float = 0.0 : 
@@ -162,6 +225,15 @@ func _process(delta: float) -> void:
 		var tween : Tween = get_tree().create_tween();
 		emerald_count = Global.emerald_count;
 		tween.tween_property(self, \"label_emerald_count\", emerald_count, 1.0).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_page_back_button_pressed() -> void:
+	shop_menu.open_page(shop_menu.currect_page-1);
+	AudioManager.play_global_audio(CLICK_SOUND);
+func _on_page_next_button_pressed() -> void:
+	shop_menu.open_page(shop_menu.currect_page+1);
+	AudioManager.play_global_audio(CLICK_SOUND);
 "
 
 [sub_resource type="LabelSettings" id="LabelSettings_5e4mp"]
@@ -231,6 +303,7 @@ offset_left = 1.0
 offset_right = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("1_7bsho")
 expand_mode = 1
 
@@ -273,10 +346,10 @@ label_settings = SubResource("LabelSettings_hf1an")
 autowrap_mode = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer"]
-offset_left = 329.0
-offset_top = 688.0
-offset_right = 796.0
-offset_bottom = 714.0
+offset_left = 328.0
+offset_top = 681.0
+offset_right = 795.0
+offset_bottom = 707.0
 scale = Vector2(2, 2)
 size_flags_horizontal = 8
 theme_override_constants/separation = 0
@@ -327,5 +400,37 @@ texture_hover = ExtResource("8_fpc4r")
 stretch_mode = 6
 flip_h = true
 
+[node name="HBoxContainer3" type="HBoxContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="PageBackButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = ExtResource("7_18qqm")
+texture_pressed = ExtResource("8_fpc4r")
+texture_hover = ExtResource("8_fpc4r")
+stretch_mode = 5
+flip_h = true
+
+[node name="PageNextButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 4
+texture_normal = ExtResource("7_18qqm")
+texture_pressed = ExtResource("8_fpc4r")
+texture_hover = ExtResource("8_fpc4r")
+stretch_mode = 5
+
 [connection signal="pressed" from="CanvasLayer/HBoxContainer2/BuyButton" to="." method="_on_buy_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageBackButton" to="CanvasLayer" method="_on_page_back_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageNextButton" to="CanvasLayer" method="_on_page_next_button_pressed"]
