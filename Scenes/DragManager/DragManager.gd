@@ -23,7 +23,7 @@ func set_drag_preview(preview : CanvasItem) :
 	if (drag_preview != null) : 
 		drag_preview.queue_free();
 	drag_preview = preview;
-	drag_preview.visible = false;
+	drag_preview.visible = true;
 	preview.scale = Vector2(64, 64) / preview.texture.get_size();
 	if (!preview.is_inside_tree()) : 
 		self.add_child(preview);
@@ -52,9 +52,7 @@ func drag_end() :
 func _input(event: InputEvent) -> void:
 	if (event is InputEventFromWindow) : 
 		if (!dragging) : 
-			if (event is InputEventScreenTouch && event.is_pressed()) : 
-				pressed = true;
-			if (pressed || event is InputEventScreenDrag) : 
+			if (event is InputEventScreenDrag) : 
 				var delete_list : Array[int] = [];
 				var count : int = -1;
 				for obj : CanvasItem in register_list : 
@@ -71,15 +69,12 @@ func _input(event: InputEvent) -> void:
 				if (delete_list.size() > 0) : 
 					for i : int in delete_list : 
 						register_list.remove_at(i);
-				pressed = false;
 		if (dragging) : 
-			if (drag_preview != null && event is InputEventScreenDrag && event.index == drag_index) : 
-				drag_preview.visible = true;
+			if (drag_preview != null && (event is InputEventScreenDrag || event is InputEventScreenTouch)) : 
 				drag_preview.global_position = event.position;
 			var is_released : bool = false;
-			var success : bool = false;
-			if (event is InputEventScreenTouch && event.index == drag_index) : 
-				if (event.is_released()) :
+			if (event is InputEventScreenTouch) : 
+				if (event.is_released()) : 
 					dragging = false;
 					is_released = true;
 					if (drag_preview != null) : 

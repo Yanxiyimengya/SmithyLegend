@@ -14,7 +14,6 @@ var item_type : String = \"\" :
 	set(value) : 
 		if (Global.item_dict.has(value)) : 
 			$TextureRect.texture = Global.item_dict[value][\"texture\"];
-			$TextureRect.scale
 		else : $TextureRect.texture = null;
 		item_type = value;
 
@@ -61,19 +60,24 @@ func _process(delta: float) -> void:
 		z_pos = (global_position.y);
 		z_pos = clamp(z_pos, 610, 720);
 
+var drag_index : int = -1;
 func _input(event: InputEvent) -> void:
-	if (!drag_protected && event is InputEventMouse) : 
-		if (event is InputEventMouseMotion && dragging) : 
-			global_position = event.global_position;
-		if (event is InputEventMouseButton && check_box.get_global_rect().has_point(event.position)) : 
-			if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT && !DragManager.dragging) : 
-				DragManager.drag_start([\"IngredientsDrag\", item_type]);
-				var spr : Node = Sprite2D.new();
-				spr.texture = Global.item_dict[item_type][\"texture\"];
-				DragManager.set_drag_preview(spr);
-				dragging = true;
-				velocity = Vector2.ZERO;
-				shadow_visible = false;
+	if (!drag_protected) : 
+		if (event is InputEventScreenTouch && check_box.get_global_rect().has_point(event.position)) : 
+			if (event.is_pressed()) : 
+				if (!DragManager.dragging) : 
+					DragManager.drag_start([\"IngredientsDrag\", item_type]);
+					var spr : Node = Sprite2D.new();
+					spr.texture = Global.item_dict[item_type][\"texture\"];
+					DragManager.set_drag_preview(spr);
+					dragging = true;
+					velocity = Vector2.ZERO;
+					shadow_visible = false;
+					global_position = event.position;
+					drag_index = event.index;
+		
+		if (event is InputEventScreenDrag && drag_index == event.index && dragging) : 
+			global_position = event.position;
 "
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_mhvn4"]

@@ -9,3 +9,4 @@ script = ExtResource("1_vp5ui")
 
 [node name="GlobalAudioPlayer" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamPolyphonic_ndait")
+bus = &"Sound"

@@ -50,21 +50,14 @@ var result : Array[String] = [] :
 		for item : String in result : 
 			carry_emeralds_count += Global.item_dict[item]["value"];
 		ui.set_result(value);
-#var texture : Texture2D = null : 
-	#set(value) : 
-		#$Sprite2D.texture = value;
-		#$Sprite2D.scale.x = 290 / $Sprite2D.get_rect().size.y;
-		#$Sprite2D.scale.y = $Sprite2D.scale.x;
-		#$Sprite2D.offset.y = -$Sprite2D.scale.y/2;
-		#texture = value;
-var carry_emeralds_count : int = 0;
+var carry_emeralds_count : int = 1;
 
 func _ready() -> void : 
 	DragManager.register_object(self);
 
 func _process(delta: float) -> void : 
 	if (can_be_provided) : 
-		mood += delta * mood_speed;
+		mood += (delta * mood_speed * 0.8);
 
 func _dm_can_drag(as_position : Vector2, data : Variant) : 
 	if (can_be_provided) :

@@ -17,7 +17,7 @@ var volume : float = 1.0 :
 	set(value) :
 		volume = value;
 		player_node.volume_db = value;
-var bus : StringName = &"Master" :
+var bus : StringName = &"BGM" :
 	set(value) :
 		bus = value;
 		player_node.bus = value;
@@ -45,7 +45,8 @@ func play(from_pos : float = 0.0) -> void:
 	volume = 1.0;
 	pitch = 1.0;
 	looping = false;
-	bus = &"Master";
+	bus = &"BGM";
+	player_node.bus = self.bus;
 	player_node.process_mode = Node.PROCESS_MODE_ALWAYS;
 
 func stop() -> void :

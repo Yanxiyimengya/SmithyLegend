@@ -22,7 +22,7 @@ func play_suond(stream : AudioStream) -> AudioTask :
 	audio_task.play();
 	return audio_task;
 
-func play_global_audio(stream: AudioStream, from_offset: float = 0, volume_db: float = 0, pitch_scale: float = 1.0, playback_type: AudioServer.PlaybackType = 0, bus: StringName = &"Master") : 
+func play_global_audio(stream: AudioStream, from_offset: float = 0, volume_db: float = 0, pitch_scale: float = 1.0, playback_type : int = 0, bus: StringName = &"Sound") : 
 	if (!global_audio_player.playing) : 
 		global_audio_player.play();
 	var playback : AudioStreamPlayback = global_audio_player.get_stream_playback();

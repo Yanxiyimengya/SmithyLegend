@@ -1,0 +1,13 @@
+[gd_scene load_steps=6 format=3 uid="uid://bgfbku3ll0bul"]
+
+[ext_resource type="Script" path="res://Scenes/Global/Global.gd" id="1_og1l2"]
+[ext_resource type="PackedScene" uid="uid://bbyak2wetx75r" path="res://Scenes/StartMenus/main_menu.tscn" id="3_s6d16"]
+[ext_resource type="PackedScene" uid="uid://dwhs4hyoemtk" path="res://Scenes/StartMenus/shop_menu.tscn" id="4_a7it1"]
+[ext_resource type="PackedScene" uid="uid://cctfh7b2yfd0i" path="res://Scenes/StartMenus/start_menu_2.tscn" id="5_dxckq"]
+[ext_resource type="PackedScene" uid="uid://3cfrpxyldmeo" path="res://Scenes/Game/game.tscn" id="69_7qb3k"]
+
+[node name="Global" type="Node"]
+script = ExtResource("1_og1l2")
+
+[node name="ResourcePreloader" type="ResourcePreloader" parent="."]
+resources = [PackedStringArray("game", "main_menu", "shop_menu", "start_menu"), [ExtResource("69_7qb3k"), ExtResource("3_s6d16"), ExtResource("4_a7it1"), ExtResource("5_dxckq")]]

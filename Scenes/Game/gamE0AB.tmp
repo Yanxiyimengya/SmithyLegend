@@ -1,0 +1,2318 @@
+[gd_scene load_steps=139 format=3 uid="uid://3cfrpxyldmeo"]
+
+[ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/StartMenu/background_ow.png" id="1_023tj"]
+[ext_resource type="Texture2D" uid="uid://djccodq7284xy" path="res://Graphics/UI/crafetting_table.png" id="1_d0ag6"]
+[ext_resource type="PackedScene" uid="uid://c7n0juspclyhv" path="res://Scenes/Game/ItemBar/item_bar_gui.tscn" id="2_knh23"]
+[ext_resource type="Texture2D" uid="uid://nwsibve3ecjt" path="res://Graphics/bg_bottom.png" id="4_1ae1r"]
+[ext_resource type="Texture2D" uid="uid://c20py6hhsmvit" path="res://Graphics/IronWorker/IronWorkerVillager.png" id="4_p5dng"]
+[ext_resource type="Texture2D" uid="uid://pe41418sdo4k" path="res://Graphics/Item/bundle_filled.png" id="5_2gwds"]
+[ext_resource type="Script" path="res://Scenes/Game/check_box.gd" id="6_60qey"]
+[ext_resource type="PackedScene" uid="uid://bfy43uxjjft4f" path="res://Scenes/Game/furnace.tscn" id="6_el30o"]
+[ext_resource type="Texture2D" uid="uid://ddsd236iqpq7p" path="res://Graphics/ParticleEffect/glint.png" id="7_mb2el"]
+[ext_resource type="Texture2D" uid="uid://dyen6hgu1oemv" path="res://Graphics/btop.png" id="9_5vbty"]
+[ext_resource type="Texture2D" uid="uid://62nwtyoqw3ry" path="res://Graphics/BlockTexture/crafting_table_top.png" id="10_u4yik"]
+[ext_resource type="Shader" path="res://Shaders/chopping_block.gdshader" id="11_1pr1c"]
+[ext_resource type="PackedScene" uid="uid://cuf2wici1h57u" path="res://Scenes/Game/chopping_block.tscn" id="11_ejne7"]
+[ext_resource type="Texture2D" uid="uid://sujr27hdoigy" path="res://Graphics/BlockTexture/oak_log.png" id="12_6snk1"]
+[ext_resource type="Texture2D" uid="uid://bo7koufla3x7x" path="res://Graphics/UI/item_bar.png" id="13_610yx"]
+[ext_resource type="Texture2D" uid="uid://cdc6p81i0fo2k" path="res://Graphics/UI/ui.png" id="13_a0fom"]
+[ext_resource type="Texture2D" uid="uid://c3d6b8574icjw" path="res://Graphics/Item/Iron/raw_iron.png" id="14_6p38k"]
+[ext_resource type="Texture2D" uid="uid://n2ytkgauhjg3" path="res://Graphics/Item/emerald.png" id="15_6qgt2"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="16_dlhgu"]
+[ext_resource type="Texture2D" uid="uid://cn535282h8kl4" path="res://Graphics/UI/paused.png" id="17_ejtjb"]
+[ext_resource type="Texture2D" uid="uid://cuua2ucpox8t4" path="res://Graphics/UI/return.png" id="18_dfxmm"]
+[ext_resource type="Texture2D" uid="uid://bkmfxli3a0yc6" path="res://Graphics/Item/clock.png" id="18_k4ywe"]
+[ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="20_8wvku"]
+[ext_resource type="Texture2D" uid="uid://b1oytv4glbt28" path="res://Graphics/UI/knowlage_book_button_highlighted.png" id="21_vedkp"]
+[ext_resource type="Texture2D" uid="uid://pwhnh7r5omus" path="res://Graphics/UI/knowlage_book_button.png" id="22_5e8ul"]
+[ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="26_ejfb6"]
+
+[sub_resource type="GDScript" id="GDScript_4do7n"]
+script/source = "extends Node2D;
+@onready var game_scene: Node2D = $GameScene;
+@onready var iron_worker_soundplayer : AudioStreamPlayer = $GameScene/SmithyHouse/IronWorkerSoundPlayer;
+@onready var smithy_house : Node2D = $GameScene/SmithyHouse;
+@onready var iron_worker_villager : Sprite2D = $GameScene/SmithyHouse/Marker2D/IronWorkerVillager;
+@onready var crafting_table_canvas_layer: CanvasLayer = $CraftingTableCanvasLayer;
+@onready var item_bar: Control = $GameScene/SmithyHouse/ItemBar;
+@onready var mine_list: Node2D = $GameScene/WorkSpace/GirndstonePlantform/MineList;
+@onready var game_timer: Timer = %GameTimer;
+@onready var timeout_ui: CanvasLayer = $TimeoutUI;
+@onready var gui_layer: CanvasLayer = $GUILayer;
+
+var ingredient_list : Array[String] = [\"raw_copper\", \"raw_iron\"];
+const START_MENU_BGM = preload(\"res://Audio/MenuBGM.MP3\");
+
+var bgm_audio_task : AudioTask = null;
+var make_emerald_count : int = 0;
+
+func _ready() -> void : 
+	item_bar.add_item_bar(\"raw_copper\", \"粗铜\");
+	item_bar.add_item_bar(\"raw_iron\", \"粗铁\");
+	if (\"gold_upgrade\" in Global.upgrade_list) : 
+		ingredient_list.append(\"raw_gold\");
+		item_bar.add_item_bar(\"raw_gold\", \"粗金\");
+	if (\"diamond_upgrade\" in Global.upgrade_list) : 
+		ingredient_list.append(\"diamond\");
+		item_bar.add_item_bar(\"diamond\", \"钻石\");
+	mine_list.create_mine();
+	
+	bgm_audio_task = AudioManager.play_suond(START_MENU_BGM);
+	bgm_audio_task.volume = -5;
+	bgm_audio_task.looping = true;
+	
+	if (Global.day >= 10) : 
+		game_timer.wait_time = 210;
+		if (Global.day >= 20) : 
+			game_timer.wait_time = 240;
+			if (Global.day >= 30) : 
+				game_timer.wait_time = 270;
+	
+	if (Global.day == 0) : 
+		game_scene.process_mode = Node.PROCESS_MODE_DISABLED;
+		await get_tree().create_timer(1).timeout;
+		smithy_house.villiger_speaking = true;
+		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/Villiger/day1_voice1.MP3\");
+		iron_worker_soundplayer.play();
+		await iron_worker_soundplayer.finished;
+		smithy_house.villiger_speaking = false;
+		
+		await get_tree().create_timer(0.25).timeout;
+		smithy_house.villiger_speaking = true;
+		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/Villiger/day1_voice2.MP3\");
+		iron_worker_soundplayer.play();
+		await iron_worker_soundplayer.finished;
+		smithy_house.villiger_speaking = false;
+		game_scene.process_mode = Node.PROCESS_MODE_INHERIT;
+	
+	game_timer.start();
+	
+
+func pause_game() : 
+	get_tree().paused = true;
+	gui_layer.process_mode = Node.PROCESS_MODE_DISABLED;
+	game_scene.process_mode = Node.PROCESS_MODE_DISABLED;
+	var tween : Tween = get_tree().create_tween();
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
+	tween.tween_property(bgm_audio_task, \"volume\", -80, 0.1);
+	await tween.finished;
+	bgm_audio_task.pause();
+
+func resume_game() : 
+	get_tree().paused = false;
+	game_scene.process_mode = Node.PROCESS_MODE_INHERIT;
+	gui_layer.process_mode = Node.PROCESS_MODE_INHERIT;
+	var tween : Tween = get_tree().create_tween();
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
+	tween.tween_property(bgm_audio_task, \"volume\", -5, 0.1);
+	await tween.finished;
+	bgm_audio_task.resume();
+
+func exit_game() : 
+	get_tree().paused = false;
+	SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/main_menu.tscn\");
+	AudioManager.stop_all_sound();
+	DragManager.free_drag_item();
+	Global.save_game();
+
+func _on_game_timer_timeout() -> void:
+	pause_game();
+	timeout_ui.open();
+	Global.day += 1;
+	Global.emerald_count += make_emerald_count;
+	Global.game_time += game_timer.wait_time;
+"
+
+[sub_resource type="GDScript" id="GDScript_mlhnp"]
+script/source = "extends Node2D;
+@onready var crafting_table_canvas_layer: CanvasLayer = $\"../CraftingTableCanvasLayer\";
+
+func _on_creafetting_table_button_pressed() -> void:
+	if (!crafting_table_canvas_layer.visible) : 
+		crafting_table_canvas_layer.open();
+	else : 
+		crafting_table_canvas_layer.close();
+
+func _input(event: InputEvent) -> void:
+	if (event is InputEventKey && event.keycode == KEY_E && event.is_pressed()) : 
+		if (!crafting_table_canvas_layer.visible) : 
+			crafting_table_canvas_layer.open();
+		else : 
+			crafting_table_canvas_layer.close();
+"
+
+[sub_resource type="GDScript" id="GDScript_eu4ge"]
+script/source = "extends Node2D;
+ 
+var global_list : Array[String] = [\"copper_ingot\", \"iron_ingot\"];
+var max_value : int = 10;
+
+@onready var slot_marker : Array[Node] = [$Slot1, $Slot2, $Slot3];
+@onready var timer: Timer = $Timer;
+
+var character_list : Array[Node] = [null, null, null];
+const CHARACTER_LIST : Array[PackedScene] = [
+	preload(\"res://Scenes/Game/Characters/character.tscn\"),
+	preload(\"res://Scenes/Game/Characters/character._nitwit.tscn\"),
+
+];
+
+func _ready() -> void:
+	global_list.append_array(Global.recipe_dict.keys());
+	if (\"iron_upgrade\" in Global.upgrade_list) : 
+		global_list.append(\"iron_ingot\");
+	if (\"gold_upgrade\" in Global.upgrade_list) : 
+		global_list.append(\"gold_ingot\");
+
+func summon_diff_character(count : int) : 
+	var result_list : Array[String] = [];
+	var slot : int = 0;
+	for n : Node in character_list : 
+		if (n == null) : 
+			var item_id : String;
+			var value : int = 0;
+			var i : int = 0;
+			while (i < count && value < max_value) : 
+				item_id = global_list[randi() % global_list.size()];
+				value += Global.item_dict[item_id][\"value\"];
+				result_list.append(global_list[randi() % global_list.size()]);
+				i+=1;
+			
+			if(randi()%12==0 && Global.day > 10):
+				summon_character(1 ,result_list, slot);
+			else :
+				summon_character(0 ,result_list, slot);
+			break;
+		slot += 1;
+
+@onready var gui_layer: CanvasLayer = $\"../../GUILayer\";
+func summon_character(type : int, result : Array[String], slot : int) : 
+	if (result.is_empty()) : return;
+	if (character_list[slot] != null) : return;
+	await get_tree().process_frame;
+	var character_node : Node = CHARACTER_LIST[type % CHARACTER_LIST.size()].instantiate();
+	add_child(character_node);
+	character_list[slot] = character_node;
+	character_node.result = result;
+	character_node.global_position = Vector2([300, 1280 + 90].pick_random(),520);
+	await character_node.walk_to(slot_marker[slot].global_position);
+	character_node.can_be_provided = true;
+	character_node.payed.connect(func() : 
+		gui_layer.create_emerald_effect(character_node.global_position-Vector2(0, 200), Vector2(38, 39), character_node.carry_emeralds_count * Global.value_multiplier);
+	);
+	character_node.exited.connect(func() : 
+		character_node.can_be_provided = false;
+		character_list[slot] = null;
+		await character_node.walk_to(Vector2([300, 1280 + 80].pick_random(),520));
+		character_node.queue_free();
+	);
+
+func _on_timer_timeout() -> void : 
+	if (%GameTimer.time_left < 10) : return;
+	summon_diff_character(randi() % 3 + 1);
+	timer.start(randf_range(4, 8));
+	pass;
+"
+
+[sub_resource type="GDScript" id="GDScript_0we0t"]
+script/source = "extends Node2D;
+
+@onready var item_bar: Control = $ItemBar;
+@onready var bag_export_marker: Marker2D = $Marker2D/IronWorkerVillager/Bag/BagExportMarker
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+@onready var iron_worker_villager: Sprite2D = $Marker2D/IronWorkerVillager;
+var villiger_speaking : bool = false : 
+	set(value) :
+		if (value) :
+			animation_player.play(&\"VillagerSpeakingAnim\");
+		else : 
+			animation_player.stop();
+		villiger_speaking = value;
+
+@onready var mine_list: Node2D = $\"../WorkSpace/GirndstonePlantform/MineList\";
+const BUNDLE_REMOVE_SOUND : Array[AudioStream] = [
+	preload(\"res://Audio/Sound/Bundle_remove_one1.ogg\"),
+	preload(\"res://Audio/Sound/Bundle_remove_one2.ogg\"),
+	preload(\"res://Audio/Sound/Bundle_remove_one3.ogg\"),
+];
+
+func _ready() -> void : 
+	item_bar.select_item.connect(func(item_id : Variant) : 
+		AudioManager.play_global_audio(BUNDLE_REMOVE_SOUND[randi() % 3]);
+		var mine_slot : Node2D = mine_list.get_node(item_id);
+		iron_worker_villager.replenishment(bag_export_marker.global_position, mine_slot.global_position, Global.item_dict[item_id][\"texture\"], mine_slot);
+	);
+	pass;
+"
+
+[sub_resource type="GDScript" id="GDScript_a3pdo"]
+script/source = "extends Sprite2D;
+@onready var item_bar: Control = $\"../../ItemBar\";
+@onready var bag_sprite : Sprite2D = $Bag;
+@onready var bag_export_marker: Marker2D = $Bag/BagExportMarker;
+@onready var mine_list: Node2D = $\"../../../WorkSpace/GirndstonePlantform/MineList\";
+
+var replenishmenting : bool = false;
+var can_open_gui : bool= true;
+var gui_openning : bool= false;
+var ironworker_upgrade : bool = false;
+
+var VILLIGER_SOUND_HAGGLE : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_haggle1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_haggle2.ogg\")
+];
+var VILLIGER_SOUND_IDLE : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_idle1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_idle2.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_idle3.ogg\")
+];
+
+const ITEM_ADD_EFFECT = preload(\"res://Scenes/Game/Effect/item_add_effect.tscn\");
+
+func _ready() -> void: 
+	ironworker_upgrade = Global.upgrade_list.has(\"ironworker_upgrade\");
+
+func replenishment(start : Vector2, end : Vector2, item_texture : Texture2D, item_slot : Node) : 
+	var tween : Tween = get_tree().create_tween().set_parallel(true);
+	tween.tween_property(bag_sprite, \"scale\", Vector2.ONE * 9.3, 0.1);
+	tween.tween_property(bag_sprite, \"position\", Vector2(90, -475), 0.1);
+	tween.chain();
+	tween.tween_property(bag_sprite, \"scale\", Vector2.ONE * 9, 0.1);
+	tween.tween_property(bag_sprite, \"position\", Vector2(90, -465), 0.1);
+	tween.chain();
+	
+	var item : Node = ITEM_ADD_EFFECT.instantiate();
+	item.start_position = start;
+	item.target_position = end + Vector2(randi_range(-20, 20), randi_range(-20, 20));
+	item.control_point = Vector2(end.x, start.y - 140) + Vector2(randi_range(-50, 50), randi_range(-40, 120));
+	item.texture = item_texture;
+	item.rotation_degrees = randf_range(0, PI*2);
+	item.rotation_speed = randf_range(-5, 5);
+	item.speed = 1.6;
+	
+	get_tree().current_scene.add_child(item);
+	
+	item.finshed.connect(func() : 
+		if (item_slot) : 
+			item_slot.append_item();
+	);
+
+func _on_check_box_gui_input(event: InputEvent) -> void : 
+	if (event is InputEventMouse && event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
+		if (ironworker_upgrade) : 
+			if (!replenishmenting) : 
+				replenishmenting = true;
+				for mine : Node in mine_list.mine_list : 
+					for i : int in range(8-mine.item_count) : 
+						replenishment(bag_export_marker.global_position, mine.global_position, Global.item_dict[mine.item_type][\"texture\"],mine);
+						await get_tree().create_timer(0.1).timeout;
+				replenishmenting = false;
+			# 铁匠升级
+		else : 
+			if (can_open_gui) : 
+				var tween : Tween = get_tree().create_tween();
+				if (gui_openning) : 
+					AudioManager.play_global_audio(VILLIGER_SOUND_IDLE[randi() % 3]);
+					tween.tween_property(self, \"rotation_degrees\", 8.0, 0.2);
+					tween.tween_property(item_bar, \"position:x\", 230.0, 0.3).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_SINE);
+					item_bar.process_mode = Node.PROCESS_MODE_DISABLED;
+				else : 
+					AudioManager.play_global_audio(VILLIGER_SOUND_HAGGLE[randi() % 2]);
+					tween.tween_property(self, \"rotation_degrees\", 2.0, 0.2);
+					tween.tween_property(item_bar, \"position:x\", 500.0, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CIRC);
+					item_bar.process_mode = Node.PROCESS_MODE_INHERIT;
+				can_open_gui = false;
+				await tween.finished;
+				can_open_gui = true;
+				gui_openning = !gui_openning;
+"
+
+[sub_resource type="Curve" id="Curve_6l8tq"]
+_data = [Vector2(0.0294118, 1), 0.0, 0.0, 0, 0, Vector2(0.863636, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_kacuu"]
+curve = SubResource("Curve_6l8tq")
+
+[sub_resource type="Curve" id="Curve_i7jbf"]
+max_value = 3.0
+_data = [Vector2(0, 1.81319), 0.0, 0.0, 0, 0, Vector2(0.772727, 1.68132), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_bgsbx"]
+curve = SubResource("Curve_i7jbf")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fxdm6"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(130, 400, 1)
+direction = Vector3(0, -1, 0)
+initial_velocity_max = 25.0
+gravity = Vector3(0, -3, 0)
+scale_min = 2.0
+scale_max = 2.0
+scale_over_velocity_curve = SubResource("CurveTexture_bgsbx")
+alpha_curve = SubResource("CurveTexture_kacuu")
+
+[sub_resource type="Animation" id="Animation_osi8j"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.139626]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0.5, 0.5)]
+}
+
+[sub_resource type="Animation" id="Animation_7dvpy"]
+resource_name = "VillagerHappy"
+length = 0.3
+step = 0.01
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.21),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.5, 0.5), Vector2(0.52, 0.52), Vector2(0.5, 0.5)]
+}
+
+[sub_resource type="Animation" id="Animation_5g8x2"]
+resource_name = "VillagerIdle"
+length = 5.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0666667, 0.133333, 0.2, 0.266667, 0.333333, 0.4, 0.466667, 0.533333, 0.6, 0.666667, 0.733333, 0.8, 0.866667, 0.933333, 1, 4, 4.06667, 4.13333, 4.2, 4.26667, 4.33333, 4.4, 4.46667, 4.53333, 4.6, 4.66667, 4.73333, 4.8, 4.86667, 4.93333, 5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [0.139626, 0.140389, 0.142644, 0.146293, 0.151176, 0.157079, 0.163746, 0.170884, 0.178182, 0.18532, 0.191986, 0.19789, 0.202773, 0.206422, 0.208677, 0.20944, 0.20944, 0.208677, 0.206422, 0.202773, 0.19789, 0.191986, 0.18532, 0.178182, 0.170884, 0.163746, 0.15708, 0.151176, 0.146293, 0.142644, 0.140389, 0.139626]
+}
+
+[sub_resource type="Animation" id="Animation_ban0g"]
+resource_name = "VillagerSoundAnim"
+length = 0.15
+loop_mode = 1
+step = 0.01
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -5), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.139626, 0.139626, 0.139626]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("GameScene/SmithyHouse/Marker2D/IronWorkerVillager:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.5, 0.5), Vector2(0.51, 0.51), Vector2(0.5, 0.5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_hm501"]
+_data = {
+"RESET": SubResource("Animation_osi8j"),
+"VillagerHappy": SubResource("Animation_7dvpy"),
+"VillagerIdle": SubResource("Animation_5g8x2"),
+"VillagerSpeakingAnim": SubResource("Animation_ban0g")
+}
+
+[sub_resource type="GDScript" id="GDScript_tf0w6"]
+script/source = "extends Node2D
+@onready var furnace_scene: Node3D = $\"../../SubViewportContainer/SubViewport/FurnaceScene\";
+const MINE = preload(\"res://Scenes/Game/mine.tscn\");
+@onready var game: Node2D = $\"../../../..\";
+
+var mine_list : Array[Node] = [];
+
+func create_mine() -> void:
+	var item_info : Dictionary;
+	var pos : Vector2 = Vector2.ZERO;
+	for key : String in game.ingredient_list : 
+		item_info = Global.item_dict[key];
+		var mine_slot : Node = MINE.instantiate();
+		mine_list.append(mine_slot);
+		mine_slot.item_texture = item_info[\"texture\"];
+		mine_slot.item_type = key;
+		mine_slot.name = key;
+		mine_slot.position = pos;
+		add_child(mine_slot);
+		pos.x += 300;
+"
+
+[sub_resource type="GDScript" id="GDScript_tlro2"]
+script/source = "extends SubViewportContainer;
+@onready var furnace_scene: Node3D = $SubViewport/FurnaceScene;
+
+var collision_node : Node = null;
+var collision_area : Area3D = null;
+var furnace_count : int = 1;
+var furnace_capacity : int = 2;
+
+func _ready() -> void : 
+	if (\"furnace_append\" in Global.upgrade_list) : 
+		furnace_count = clamp(Global.upgrade_list[\"furnace_append\"]+1, 1, 4);
+	var furnace_upgrade : bool = (\"furnace_upgrade\" in Global.upgrade_list);
+	for i : int in round(furnace_count) : 
+		furnace_scene.add_furnace(furnace_upgrade);
+	
+	if (\"furnace_capacity\" in Global.upgrade_list) : 
+		match (Global.upgrade_list[\"furnace_capacity\"]) : 
+			1 : 
+				furnace_capacity = 4;
+			2 : 
+				furnace_capacity = 8;
+	DragManager.register_object(self);
+
+func _process(_delta: float) -> void : 
+	collision_area = get_area();
+	if (collision_area) : 
+		collision_node = collision_area.get_parent();
+	else : 
+		collision_node = null;
+
+func _dm_can_drag(as_position : Vector2, data : Variant) : 
+	if (data && data is Array && data.size() > 0) : 
+		if (data[0] == \"IngredientsDrag\") : 
+			if (collision_node && Global.item_dict[data[1]][\"can_smelt\"]) : 
+				if ( (collision_node.item_type == data[1] || !collision_node.on) && collision_node.item_count < furnace_capacity) :
+					return true;
+	return false;
+
+func _dm_drop_data(data : Variant) : 
+	collision_node.set_on(true, data[1]);
+	collision_node.item_count += 1;
+	furnace_scene.play_anim(&\"Shake\");
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_furnace_scene_finished(furnace: Node3D) -> void : 
+	var sp : String = Global.item_dict[furnace.item_type][\"smelt_products\"];
+	if (!sp.is_empty()) : 
+		AudioManager.play_global_audio(CLICK_SOUND);
+		var camera : Camera3D = furnace_scene.get_viewport().get_camera_3d();
+		var drop_item : Node2D = DragManager.create_drop_item(Global.item_dict[furnace.item_type][\"smelt_products\"]);
+		drop_item.global_position = self.global_position + camera.unproject_position(furnace.export_marked.global_position) * 2;
+		drop_item.drag_protected = true;
+		drop_item.velocity = (Vector2.ONE).rotated(randf_range(PI*0.7, PI*0.85)) * randf_range(0.5, 1.8) * 200;
+
+func get_area() -> Area3D : 
+	var result : Area3D = null;
+	var world_3d : World3D = furnace_scene.get_world_3d(); # 获取3D世界
+	var space_state : PhysicsDirectSpaceState3D = world_3d.direct_space_state; # 获取物理空间状态
+	
+	var camera : Camera3D = furnace_scene.get_viewport().get_camera_3d();
+	var mouse_position : Vector2 = furnace_scene.get_viewport().get_mouse_position();
+	var from : Vector3 = camera.project_ray_origin(mouse_position);
+	var normal : Vector3 = camera.project_ray_normal(mouse_position);
+	# 获取碰撞射线
+	
+	var raycast : PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, from + normal * 9999);
+	# 构建射线碰撞类实例
+	
+	raycast.collide_with_areas = true;
+	raycast.collide_with_bodies = false;
+	var dict : Dictionary = space_state.intersect_ray(raycast); # 检查碰撞
+	if (!dict.is_empty() && dict.has(\"collider\")) : 
+		result = dict[\"collider\"];
+	
+	return result;
+"
+
+[sub_resource type="World3D" id="World3D_rq8vb"]
+
+[sub_resource type="GDScript" id="GDScript_h01k2"]
+script/source = "extends Node;
+
+@onready var parent: SubViewportContainer = $\"..\";
+@onready var texture_rect: TextureRect = $CountShower/MarginContainer/VBoxContainer/TextureRect;
+@onready var label: Label = $CountShower/MarginContainer/VBoxContainer/Label;
+@onready var count_shower: PanelContainer = $CountShower;
+@onready var show_timer: Timer = $ShowTimer;
+
+var openning_target : Node3D = null;
+var pre_item_count : int = -1;
+
+func _process(_delta: float) -> void:
+	if (openning_target != null && openning_target.item_count != pre_item_count) : 
+		if (openning_target.item_count > 0) : 
+			pre_item_count = openning_target.item_count;
+			label.text = \"数量:\" + str(openning_target.item_count);
+		else : 
+			count_shower.hide();
+			openning_target = null;
+
+func _input(event: InputEvent) -> void:
+	if (event is InputEventScreenTouch && event.is_pressed()) : 
+		if (openning_target == null && parent.collision_node != null && parent.collision_node.on) : 
+				openning_target = parent.collision_node;
+				texture_rect.texture = Global.item_dict[parent.collision_node.item_type][\"texture\"];
+				var camera : Camera3D = parent.collision_node.get_viewport().get_camera_3d();
+				count_shower.global_position = parent.global_position + \\
+						camera.unproject_position(parent.collision_node.export_marked.global_position) * 2 + Vector2(80, -25);
+				count_shower.show();
+		else : 
+			openning_target = null;
+			count_shower.hide();
+"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_g6oan"]
+texture = ExtResource("13_610yx")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_wv8i5"]
+font = ExtResource("16_dlhgu")
+
+[sub_resource type="GDScript" id="GDScript_nlnoi"]
+script/source = "extends SubViewportContainer;
+@onready var chopping_block: Node3D = $SubViewport/ChoppingBlock;
+@onready var particle_sprite: Sprite2D = $ParticleSprite;
+
+const POP = preload(\"res://Audio/Sound/pop.ogg\");
+var particle_progress : float = 0.0 : 
+	set(value) : 
+		$ParticleSprite.material.set_shader_parameter(\"progress\", value);
+	get : return $ParticleSprite.material.get_shader_parameter(\"progress\");
+
+var collision_node : Node = null;
+var products : String = \"log\";
+var products_count : int = 1;
+
+func _ready() -> void : 
+	if (Global.upgrade_list.has(\"slashers_upgrade\")) : 
+		chopping_block.set_level(1);
+	else : 
+		chopping_block.set_level(0);
+
+func _gui_input(event: InputEvent) -> void:
+	if (event is InputEventScreenTouch && event.is_pressed()) : 
+		if (get_area(event.position) != null && chopping_block.can_hit) : 
+			chopping_block.cut();
+
+func get_area(pos : Vector2) -> Area3D : 
+	var result : Area3D = null;
+	var world_3d : World3D = chopping_block.get_world_3d(); # 获取3D世界
+	var space_state : PhysicsDirectSpaceState3D = world_3d.direct_space_state; # 获取物理空间状态
+	
+	var camera : Camera3D = chopping_block.get_viewport().get_camera_3d();
+	var mouse_position : Vector2 = pos;
+	var from : Vector3 = camera.project_ray_origin(mouse_position);
+	var normal : Vector3 = camera.project_ray_normal(mouse_position);
+	# 获取碰撞射线
+	
+	var raycast : PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, from + normal * 9999);
+	# 构建射线碰撞类实例
+	
+	raycast.collide_with_areas = true;
+	raycast.collide_with_bodies = false;
+	var dict : Dictionary = space_state.intersect_ray(raycast); # 检查碰撞
+	if (!dict.is_empty() && dict.has(\"collider\")) : 
+		result = dict[\"collider\"];
+	return result;
+
+
+func _on_chopping_block_destoried() -> void:
+	if (products != \"\") : 
+		var camera : Camera3D = chopping_block.get_viewport().get_camera_3d();
+		for i : int in range(products_count) : 
+			var drop_item : Node2D = DragManager.create_drop_item(self.products);
+			drop_item.global_position = self.global_position + camera.unproject_position(chopping_block.global_position);
+			drop_item.global_position.y -= 100;
+			drop_item.drag_protected = true;
+			drop_item.velocity = (Vector2.RIGHT).rotated(-randf_range(0.0, PI*0.4)) * randf_range(650,700);
+		var tween : Tween = get_tree().create_tween();
+		particle_sprite.visible = true;
+		tween.tween_property(self, \"particle_progress\", 2.0, 1.0).from(0.0);
+		await tween.finished;
+		particle_sprite.visible = false;
+"
+
+[sub_resource type="World3D" id="World3D_pr1ub"]
+
+[sub_resource type="Curve" id="Curve_afwo6"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.366397, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_mbuqc"]
+curve = SubResource("Curve_afwo6")
+
+[sub_resource type="Curve" id="Curve_fhlm6"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_418hl"]
+curve = SubResource("Curve_fhlm6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vtcv4"]
+resource_local_to_scene = true
+shader = ExtResource("11_1pr1c")
+shader_parameter/time_factor = 0.0
+shader_parameter/progress = 0.0
+shader_parameter/oneshot = true
+shader_parameter/init_size = 0.036
+shader_parameter/init_interval = 0.129
+shader_parameter/init_offset = 0.1
+shader_parameter/init_num = 5.0
+shader_parameter/init_direction = Vector2(-0.7, 1)
+shader_parameter/rnd_direction_factor = Vector2(3.215, 1)
+shader_parameter/rnd_size_factor = Vector2(1, 1)
+shader_parameter/rnd_rotate_factor = 0.0
+shader_parameter/rnd_rotate_offset = 0.0
+shader_parameter/angle_velocity_min = 0.0
+shader_parameter/angle_velocity_max = 0.0
+shader_parameter/expand_factor = Vector2(4, 4)
+shader_parameter/expand_offset = Vector2(-1.635, -1.165)
+shader_parameter/bounce_thresh = 0.0
+shader_parameter/bounce_factor = 0.0
+shader_parameter/life_rate_alpha_decay_curve = SubResource("CurveTexture_mbuqc")
+shader_parameter/life_rate_scale_decay_curve = SubResource("CurveTexture_418hl")
+
+[sub_resource type="GDScript" id="GDScript_biu8m"]
+script/source = "extends CanvasLayer;
+@onready var emerald_sprite: Sprite2D = $EmeraldSprite;
+@onready var emerald_count_label: Label =$EmeraldSprite/Label;
+@onready var game_timer: Timer = %GameTimer;
+@onready var campass_sprite: AnimatedSprite2D = $CampassSprite;
+@onready var gametime_label: Label = $CampassSprite/Label;
+@onready var paused_menu: CanvasLayer = $\"../PausedMenu\";
+@onready var game: Node2D = $\"..\";
+
+var emerald_count : float = 0.0;
+var label_emerald_count : float = 0.0 : 
+	set(value) : 
+		label_emerald_count = value;
+		emerald_count_label.text = str(round(value));
+
+const EMERALD_EFFECT = preload(\"res://Scenes/Game/Effect/emerald_effect.tscn\");
+
+func _ready() -> void:
+	label_emerald_count = Global.emerald_count;
+
+func _process(_delta: float) -> void:
+	if (emerald_count != game.make_emerald_count) : 
+		var tween : Tween = get_tree().create_tween();
+		emerald_count = Global.emerald_count + game.make_emerald_count;
+		tween.tween_property(self, \"label_emerald_count\", emerald_count, 1.0).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+	
+	var second_str : String = str(int(game_timer.time_left)%60);
+	if (second_str.length() < 2) : 
+		second_str = \"0\" + second_str;
+	campass_sprite.frame = round((1.0-game_timer.time_left/game_timer.wait_time)*64);
+	gametime_label.text = str(int(game_timer.time_left/60)) + \":\" + second_str;
+	
+	
+
+func create_emerald_effect(start : Vector2, end : Vector2, value : float) : 
+	var item : Node = EMERALD_EFFECT.instantiate();
+	item.time_scale = randf_range(2, 3);
+	item.start_position = start;
+	item.target_position = end;
+	item.control_point = Vector2(randf_range(start.x, end.x), randf_range(start.y, end.y));
+	self.add_child(item);
+	item.finshed.connect(func() : 
+		game.make_emerald_count += value;
+	);
+
+
+func _on_paused_button_pressed() -> void:
+	paused_menu.open();
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_6nayt"]
+font = ExtResource("16_dlhgu")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1e2jx"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nouog"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nq80x"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mctc7"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_auko1"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_75dyw"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oe5mq"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(96, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ppe6n"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(112, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vx30d"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(128, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_st0kh"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(144, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_he3fb"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(160, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_neljm"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(176, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fkrql"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(192, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ch7tb"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(208, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t7hic"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(224, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oflvk"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(240, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yb6fs"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(256, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4b4eq"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(272, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_75u2y"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(288, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m337j"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(304, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ohf53"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(320, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uf3ea"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(336, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7r3a0"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(352, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_llnxl"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(368, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4llau"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(384, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q14op"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(400, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r2xpm"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(416, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wh6el"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(432, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c67ou"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(448, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4aih5"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(464, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6a3c8"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(480, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7prf6"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(496, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3mvy0"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(512, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qn8ce"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(528, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2uidi"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(544, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rcyf4"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(560, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1nanr"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(576, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yl8bh"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(592, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4srea"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(608, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nj40e"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(624, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jb2u7"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(640, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i0oj6"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(656, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d48nl"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(672, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_swd4s"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(688, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8yxsk"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(704, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1w40x"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(720, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xcfny"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(736, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jy04h"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(752, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t0eba"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(768, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_72tul"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(784, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bw5fq"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(800, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b3b7o"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(816, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w2d7h"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(832, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dpyj0"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(848, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xceww"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(864, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ve4xn"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(880, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ode7o"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(896, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6ek2l"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(912, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kixx6"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(928, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uoesf"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(944, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eukfc"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(960, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gijos"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(976, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_os66c"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(992, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k68ud"]
+atlas = ExtResource("18_k4ywe")
+region = Rect2(1008, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_76ugr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1e2jx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nouog")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nq80x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mctc7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_auko1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_75dyw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oe5mq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ppe6n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vx30d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_st0kh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_he3fb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_neljm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fkrql")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ch7tb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t7hic")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oflvk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yb6fs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4b4eq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_75u2y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m337j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ohf53")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uf3ea")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7r3a0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_llnxl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4llau")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q14op")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r2xpm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wh6el")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c67ou")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4aih5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6a3c8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7prf6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3mvy0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qn8ce")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2uidi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rcyf4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1nanr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yl8bh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4srea")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nj40e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jb2u7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i0oj6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d48nl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_swd4s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8yxsk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1w40x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xcfny")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jy04h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t0eba")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_72tul")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bw5fq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b3b7o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w2d7h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dpyj0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xceww")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ve4xn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ode7o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6ek2l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kixx6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_uoesf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eukfc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gijos")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_os66c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k68ud")
+}],
+"loop": true,
+"name": &"default",
+"speed": 30.0
+}]
+
+[sub_resource type="GDScript" id="GDScript_0awf5"]
+script/source = "extends CanvasLayer;
+@onready var color_rect: ColorRect = $ColorRect;
+@onready var crafetting_table_ui : TextureRect = $HBoxContainer/CrafettingTable;
+@onready var game_scene: Node2D = $\"../GameScene\";
+@onready var recipe_menu: Control = $HBoxContainer/RecipeMenu;
+@onready var recipe_list_button: TextureButton = $HBoxContainer/CrafettingTable/RecipeListButton;
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+const ITEM_BAR = preload(\"res://Scenes/Game/ItemBar/item_bar.tscn\");
+
+func _ready() -> void:
+	recipe_list_button.visible = (\"knowledge_book\" in Global.upgrade_list);
+
+func open() : 
+	visible = true;
+	AudioManager.play_global_audio(CLICK_SOUND);
+	var tween : Tween = get_tree().create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.2, 0.1).from(0.0);
+	self.process_mode = Node.PROCESS_MODE_INHERIT;
+
+func close() : 
+	self.process_mode = Node.PROCESS_MODE_DISABLED;
+	var tween : Tween = get_tree().create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.0, 0.1);
+	await tween.finished;
+	visible = false;
+	crafetting_table_ui.example = false;
+
+func _on_recipe_list_button_pressed() -> void:
+	recipe_menu.visible = !recipe_menu.visible;
+
+func _on_crafetting_table_crafted_item(item_id: Variant) -> void:
+	recipe_menu.append_recipe(item_id);
+
+func _on_recipe_menu_select_item(item_id: Variant) -> void:
+	crafetting_table_ui.auto_craft(item_id);
+"
+
+[sub_resource type="GDScript" id="GDScript_7coe7"]
+script/source = "extends HBoxContainer
+
+@onready var crafting_table_canvas_layer: CanvasLayer = $\"..\";
+
+func _unhandled_input(event: InputEvent) -> void:
+	if (event is InputEventMouseButton && !DragManager.dragging) : 
+		if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
+			crafting_table_canvas_layer.close();
+"
+
+[sub_resource type="GDScript" id="GDScript_48c35"]
+script/source = "extends Control;
+signal select_item(item_id : Variant);
+
+@onready var racipe_list_container: GridContainer = $Panel/ScrollContainer/GridContainer;
+
+var recipe_list : Dictionary = {};
+
+func append_recipe(item_type : String) : 
+	if (!recipe_list.has(item_type)) : 
+		recipe_list[item_type] = null;
+		add_item_bar(item_type, \"\");
+
+const ITEM_BAR = preload(\"res://Scenes/Game/ItemBar/item_bar.tscn\");
+func add_item_bar(item_id : Variant, item_display_name : String) : 
+	var bar : Node = ITEM_BAR.instantiate();
+	bar.texture = Global.item_dict[item_id][\"texture\"];
+	bar.text = item_display_name;
+	racipe_list_container.add_child(bar); 
+	bar.gui_input.connect(func(event: InputEvent) :
+		if (event is InputEventScreenTouch && event.is_pressed()) : 
+			select_item.emit(item_id);
+		);
+"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i6db6"]
+texture = ExtResource("13_a0fom")
+texture_margin_left = 5.0
+texture_margin_top = 18.0
+texture_margin_right = 5.0
+texture_margin_bottom = 8.0
+expand_margin_left = 5.0
+expand_margin_top = 18.0
+expand_margin_right = 5.0
+expand_margin_bottom = 8.0
+
+[sub_resource type="GDScript" id="GDScript_qqnw0"]
+script/source = "extends TextureRect
+
+signal crafted_item(item_id);
+
+const CREAFTING_TABLE_SLOT = preload(\"res://Scenes/Game/creafting_table_slot.tscn\");
+@onready var grid_container: GridContainer = $GridContainer;
+@onready var target_item_texture_rect: TextureRect = $Button/TargetItem;
+@onready var target_item_number_label: Label = $Button/TargetItem/TargetItemNumber;
+@onready var slot_export: Marker2D = $SlotExport;
+
+var item_slots : Array[Control] = [
+	null, null, null,
+	null, null, null,
+	null, null, null,
+];
+var slot_target : Control = null;
+var dragging_item : String = \"\";
+var dragging : bool = false;
+var example : bool = false : 
+	set(value) : 
+		if (!value) : 
+			for slot : Control in item_slots : 
+				slot.set_example(false);
+		example = value;
+
+var target_item : String = \"\" : 
+	set(value) : 
+		target_item = value;
+		if (Global.item_dict.has(value)) : 
+			$Button/TargetItem.texture = Global.item_dict[value][\"texture\"];
+			$Button/TargetItem.size = Vector2(55, 55);
+		else : 
+			$Button/TargetItem.texture = null;
+var target_item_count : int = 0 : 
+	set(value) : 
+		target_item_count = value;
+		target_item_number_label.visible = (value > 1);
+		target_item_number_label.text = str(value);
+
+func _ready() -> void : 
+	DragManager.register_object(self);
+	DragManager.drag_endding.connect(func(success : bool) : 
+		if (!success && dragging) : 
+			var drop_item : Node2D = DragManager.create_drop_item(dragging_item);
+			drop_item.global_position = get_global_mouse_position();
+			drop_item.item_type = dragging_item;
+		dragging = false;
+		slot_target = null;
+	);
+	for i : int in round(9) : 
+		var slot : Control = CREAFTING_TABLE_SLOT.instantiate();
+		grid_container.add_child(slot);
+		item_slots[i] = slot;
+
+func _dm_drag_data(as_position : Vector2) : 
+	slot_target = null;
+	for slot : Control in item_slots : 
+		if (slot.get_global_rect().has_point(get_global_mouse_position())) : 
+			slot_target = slot;
+			break;
+	if (slot_target == null) : return null;
+	var type : String = slot_target.item_type;
+	if (Global.item_dict.has(type)) : 
+		var spr : Sprite2D = Sprite2D.new();
+		spr.texture = Global.item_dict[type][\"texture\"];
+		spr.scale = Vector2.ONE * 4;
+		DragManager.set_drag_preview(spr);
+		dragging_item = type;
+		slot_target.item_count -= 1;
+		if (slot_target.item_count <= 0) : 
+			slot_target.item_type = \"\";
+		dragging = true;
+		update_recipe();
+		return [\"IngredientsDrag\", type];
+	return null;
+
+func _dm_can_drag(as_position : Vector2, data : Variant) : 
+	if (Rect2(Vector2.ZERO, size).has_point(as_position)) : 
+		if (data && data is Array) : 
+			if (data[0] == \"IngredientsDrag\") : 
+				for slot : Control in item_slots : 
+					if (slot.get_global_rect().has_point(get_global_mouse_position())) : 
+						slot_target = slot;
+						return true;
+	return false;
+
+func _dm_drop_data(data : Variant) : 
+	example = false;
+	if (slot_target == null) : return null;
+	if (slot_target.item_type == data[1] || (slot_target.item_type == \"\")) : 
+		slot_target.item_type = data[1];
+		slot_target.item_count += 1;
+	else : 
+		for i : int in range(slot_target.item_count) : 
+			var drop_item : Node2D = DragManager.create_drop_item(slot_target.item_type);
+			drop_item.global_position = get_global_mouse_position();
+			#drop_item.drag_protected = true;
+		slot_target.item_type = data[1];
+		slot_target.item_count = 1;
+	update_recipe();
+
+func cut_recipe_array(recipe: Array[String]) -> Array[String]:
+	var min_x: int = 3 # 最大行数
+	var max_x: int = -1 # 最小行数
+	var min_y: int = 3 # 最大列数
+	var max_y: int = -1 # 最小列数
+	
+	# 确定非空字符串的边界
+	for x in range(3):
+		for y in range(3):
+			if recipe[x + y * 3] != \"\":
+				if x < min_x:
+					min_x = x
+				if x > max_x:
+					max_x = x
+				if y < min_y:
+					min_y = y
+				if y > max_y:
+					max_y = y
+
+	# 如果没有找到非空字符串，返回空数组
+	if max_x == -1:
+		return []
+
+	# 计算裁剪后的数组宽度
+	var width := max_x - min_x + 1
+
+	# 裁剪数组
+	var cropped_recipe: Array[String] = []
+	var index := 0
+	for y in range(min_y, max_y + 1):
+		for x in range(min_x, max_x + 1):
+			cropped_recipe.append(recipe[x + y * 3])
+			index += 1
+		# 补全每行空缺
+		for _i in range(width, 3):
+			cropped_recipe.append(\"\")
+			index += 1
+	return cropped_recipe;
+
+func auto_craft(item_id: String):
+	pop_all_item();
+	example = false;
+	var recipe: Array = [];
+	var item_slot_number: int = 0;
+	if Global.recipe_dict.has(item_id) && Global.recipe_dict[item_id].size() > 0: 
+		# 获取制作配方和需要的物品数量
+		recipe = Global.recipe_dict[item_id][0][\"recipe\"];
+		item_slot_number = Global.recipe_dict[item_id][0][\"item_number\"];
+	else: 
+		return
+	var index: int = 0;
+	var pos: int = 0;
+	var drag_item_queue: Array[Node] = [];
+	var drag_itemkey_queue: Array[String] = [];
+	
+	for i_key : String in recipe : 
+		if (i_key.is_empty()) : continue;
+		drag_itemkey_queue.append(i_key);
+	
+	# 查找拖拽物品是否符合配方要求
+	for drop_obj in DragManager.drag_items.get_children(): 
+		if drag_item_queue.size() >= item_slot_number: 
+			break;
+		index = drag_itemkey_queue.find(drop_obj.item_type);
+		if index > -1: 
+			if drop_obj.item_type != \"\":
+				drag_item_queue.append(drop_obj);
+	
+	if drag_item_queue.size() < item_slot_number: 
+		var item: String = \"\"
+		# 将配方中的物品显示在槽位上
+		for i in round(recipe.size()): 
+			item = recipe[i];
+			if item != \"\": 
+				item_slots[i].set_example(true, item);
+		example = true
+	else: 
+		# 将物品放入槽位并更新配方
+		for i in round(recipe.size()): 
+			item_slots[i].item_type = recipe[i];
+			if item_slots[i].item_type != \"\": 
+				item_slots[i].item_count += 1;
+		update_recipe();
+		# 释放已使用的拖拽物品节点
+		for drop_obj in drag_item_queue: 
+			drop_obj.queue_free();
+
+func update_recipe() : 
+	var recipe : Array[String] = [];
+	for slot : Control in item_slots : 
+		recipe.append(slot.item_type);
+	recipe = cut_recipe_array(recipe);
+	var recipe_dict : Dictionary = Global.search_recipe_target_item(recipe); # 用最小配方查询
+	if (!recipe_dict.is_empty()) : 
+		target_item_count = recipe_dict[\"count\"];
+		target_item = recipe_dict[\"item\"];
+	else : 
+		target_item_count = 0;
+		target_item = \"\";
+
+func pop_all_item() : 
+	for i in round(9) : 
+		if (item_slots[i].item_type != \"\") : 
+			for o : int in round(item_slots[i].item_count) : 
+				var drop_item : Node2D = DragManager.create_drop_item(item_slots[i].item_type);
+				drop_item.global_position = item_slots[i].global_position + Vector2(32, 32);
+				#drop_item.drag_protected = true;
+			item_slots[i].item_type = \"\";
+			item_slots[i].item_count = 0;
+	target_item_count = 0;
+	target_item = \"\";
+
+
+func _on_button_pressed() -> void:
+	if (target_item == \"\") : return;
+	for i : int in target_item_count : 
+		var drop_item : Node2D = DragManager.create_drop_item(target_item);
+		drop_item.global_position = slot_export.global_position;
+		#drop_item.drag_protected = true;
+		drop_item.velocity = (Vector2.UP).rotated(deg_to_rad(randf_range(-45,0))) * randf_range(650,700);
+	crafted_item.emit(target_item);
+	for i in round(9) : 
+		item_slots[i].item_count -= 1;
+		if (item_slots[i].item_count <= 0) : 
+			item_slots[i].item_type = \"\";
+	update_recipe();
+
+
+func _on_return_button_pressed() -> void: pop_all_item();
+"
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_yk1vo"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_apjou"]
+font = ExtResource("16_dlhgu")
+font_size = 24
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="GDScript" id="GDScript_oaojv"]
+script/source = "extends CanvasLayer;
+@onready var color_rect: ColorRect = $ColorRect;
+@onready var game: Node2D = $\"..\";
+
+const A_BEAUTIFUL_DAY_HAS_PASSED = preload(\"res://Audio/ABeautifulDayHasPassed.MP3\");
+const BELL_SOUND : Array[AudioStream]= [
+	preload(\"res://Audio/Sound/Bell_use1.ogg\"),
+	preload(\"res://Audio/Sound/Bell_use2.ogg\"),
+];
+var sound_process : int = 0;
+var bgm_audio_task : AudioTask = null;
+
+func open() : 
+	self.visible = true;
+	if (bgm_audio_task != null) : 
+		bgm_audio_task.stop();
+	bgm_audio_task = AudioManager.play_suond(A_BEAUTIFUL_DAY_HAS_PASSED);
+	bgm_audio_task.looping = true;
+	color_rect.color.a = 0.0;
+	bgm_audio_task.volume = -80.0;
+	var tween : Tween = get_tree().create_tween();
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
+	tween.tween_property(color_rect, \"color:a\", 0.5, 0.3).from(0.0);
+	tween.tween_property(bgm_audio_task, \"volume\", 0, 0.2);
+	
+	for i : int in range(randi() % 3 + 2) : 
+		AudioManager.play_global_audio(BELL_SOUND[sound_process%BELL_SOUND.size()]);
+		await get_tree().create_timer(0.5).timeout;
+
+func close() : 
+	bgm_audio_task.stop();
+	var tween : Tween = get_tree().create_tween();
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
+	tween.tween_property(color_rect, \"color:a\", 0.0, 0.3);
+	tween.tween_property(bgm_audio_task, \"volume\", 0.0, 0.2).from(-80.0);
+
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	bgm_audio_task.stop();
+	game.exit_game();
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_4vk3n"]
+font = ExtResource("16_dlhgu")
+font_size = 64
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(4, 4)
+
+[sub_resource type="LabelSettings" id="LabelSettings_hjcmh"]
+font = ExtResource("16_dlhgu")
+font_size = 32
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7mp0t"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_kytjl"]
+texture = ExtResource("20_8wvku")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ebiqk"]
+texture = ExtResource("26_ejfb6")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bxdfi"]
+texture = ExtResource("26_ejfb6")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="LabelSettings" id="LabelSettings_ujvca"]
+font = ExtResource("16_dlhgu")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="GDScript" id="GDScript_uquha"]
+script/source = "extends CanvasLayer
+@onready var color_rect: ColorRect = $ColorRect;
+@onready var game: Node2D = $\"..\";
+
+const A_BEAUTIFUL_DAY_HAS_PASSED = preload(\"res://Audio/ABeautifulDayHasPassed.MP3\");
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+
+func open() : 
+	self.visible = true;
+	game.pause_game();
+	color_rect.color.a = 0.0;
+	var tween : Tween = create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.5, 0.2).from(0.0);
+
+func _on_continue_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	var tween : Tween = create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.0, 0.1).from(0.5);
+	await tween.finished;
+	self.visible = false;
+	game.resume_game();
+
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	game.exit_game();
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_eyr5d"]
+font = ExtResource("16_dlhgu")
+font_size = 32
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+
+[node name="Game" type="Node2D"]
+y_sort_enabled = true
+script = SubResource("GDScript_4do7n")
+
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -10
+texture_filter = 2
+position = Vector2(705, 280)
+scale = Vector2(0.542838, 0.542838)
+texture = ExtResource("1_023tj")
+
+[node name="GameScene" type="Node2D" parent="."]
+position = Vector2(-1, -4)
+script = SubResource("GDScript_mlhnp")
+
+[node name="GameTimer" type="Timer" parent="GameScene"]
+unique_name_in_owner = true
+wait_time = 180.0
+one_shot = true
+
+[node name="Characters" type="Node2D" parent="GameScene"]
+z_index = -1
+y_sort_enabled = true
+position = Vector2(1, 4)
+script = SubResource("GDScript_eu4ge")
+
+[node name="Slot1" type="Marker2D" parent="GameScene/Characters"]
+position = Vector2(500, 543)
+
+[node name="Slot2" type="Marker2D" parent="GameScene/Characters"]
+position = Vector2(700, 543)
+
+[node name="Slot3" type="Marker2D" parent="GameScene/Characters"]
+position = Vector2(900, 543)
+
+[node name="Timer" type="Timer" parent="GameScene/Characters"]
+wait_time = 5.0
+one_shot = true
+autostart = true
+
+[node name="SmithyHouse" type="Node2D" parent="GameScene"]
+position = Vector2(-70, 33)
+script = SubResource("GDScript_0we0t")
+
+[node name="ItemBar" parent="GameScene/SmithyHouse" instance=ExtResource("2_knh23")]
+process_mode = 4
+offset_left = 230.0
+offset_top = 170.0
+offset_right = 323.0
+offset_bottom = 292.0
+scale = Vector2(2, 2)
+mouse_filter = 2
+
+[node name="SmithyR" type="Sprite2D" parent="GameScene/SmithyHouse"]
+position = Vector2(713.85, 342)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_1ae1r")
+region_rect = Rect2(849.149, 0, 246.781, 1335)
+
+[node name="Marker2D" type="Marker2D" parent="GameScene/SmithyHouse"]
+position = Vector2(292, 674)
+
+[node name="IronWorkerVillager" type="Sprite2D" parent="GameScene/SmithyHouse/Marker2D"]
+rotation = 0.139626
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("4_p5dng")
+offset = Vector2(15.9168, -447.12)
+script = SubResource("GDScript_a3pdo")
+
+[node name="Bag" type="Sprite2D" parent="GameScene/SmithyHouse/Marker2D/IronWorkerVillager"]
+position = Vector2(90, -465)
+scale = Vector2(9, 9)
+texture = ExtResource("5_2gwds")
+offset = Vector2(0.0930252, -3.81526)
+
+[node name="BagExportMarker" type="Marker2D" parent="GameScene/SmithyHouse/Marker2D/IronWorkerVillager/Bag"]
+position = Vector2(1.75304, -9.08237)
+
+[node name="CheckBox" type="Control" parent="GameScene/SmithyHouse/Marker2D/IronWorkerVillager"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -165.0
+offset_top = -883.0
+offset_right = 118.0
+offset_bottom = -318.0
+script = ExtResource("6_60qey")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="GameScene/SmithyHouse/Marker2D/IronWorkerVillager/CheckBox"]
+z_index = 1
+position = Vector2(170.706, 351.147)
+emitting = false
+amount = 25
+process_material = SubResource("ParticleProcessMaterial_fxdm6")
+texture = ExtResource("7_mb2el")
+one_shot = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="GameScene/SmithyHouse"]
+process_mode = 3
+root_node = NodePath("../../..")
+libraries = {
+"": SubResource("AnimationLibrary_hm501")
+}
+
+[node name="IronWorkerSoundPlayer" type="AudioStreamPlayer" parent="GameScene/SmithyHouse"]
+process_mode = 3
+
+[node name="WorkSpace" type="Node2D" parent="GameScene"]
+position = Vector2(113, 47)
+scale = Vector2(0.5, 0.5)
+
+[node name="GirndstonePlantform" type="Sprite2D" parent="GameScene/WorkSpace"]
+position = Vector2(1061.12, 656)
+texture = ExtResource("9_5vbty")
+
+[node name="MineList" type="Node2D" parent="GameScene/WorkSpace/GirndstonePlantform"]
+position = Vector2(-308, 252)
+script = SubResource("GDScript_tf0w6")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="GameScene/WorkSpace"]
+offset_left = 1982.0
+offset_top = -330.0
+offset_right = 2185.0
+offset_bottom = 70.0
+scale = Vector2(4, 4)
+stretch = true
+script = SubResource("GDScript_tlro2")
+
+[node name="SubViewport" type="SubViewport" parent="GameScene/WorkSpace/SubViewportContainer"]
+world_3d = SubResource("World3D_rq8vb")
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(203, 400)
+render_target_update_mode = 4
+
+[node name="FurnaceScene" parent="GameScene/WorkSpace/SubViewportContainer/SubViewport" instance=ExtResource("6_el30o")]
+
+[node name="CountShower" type="Node" parent="GameScene/WorkSpace/SubViewportContainer"]
+script = SubResource("GDScript_h01k2")
+
+[node name="CountShower" type="PanelContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower"]
+visible = false
+offset_left = 23.0
+offset_top = -76.0
+offset_right = 87.0
+offset_bottom = -8.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_g6oan")
+
+[node name="MarginContainer" type="MarginContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("14_6p38k")
+expand_mode = 3
+
+[node name="Label" type="Label" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "数量:0"
+label_settings = SubResource("LabelSettings_wv8i5")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShowTimer" type="Timer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower"]
+wait_time = 0.5
+one_shot = true
+
+[node name="SubViewportContainer2" type="SubViewportContainer" parent="GameScene/WorkSpace"]
+y_sort_enabled = true
+offset_left = -130.0
+offset_top = 1166.0
+offset_right = 23.0
+offset_bottom = 1327.0
+scale = Vector2(2, 2)
+pivot_offset = Vector2(82, 149)
+stretch = true
+script = SubResource("GDScript_nlnoi")
+
+[node name="SubViewport" type="SubViewport" parent="GameScene/WorkSpace/SubViewportContainer2"]
+world_3d = SubResource("World3D_pr1ub")
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(153, 161)
+render_target_update_mode = 4
+
+[node name="ChoppingBlock" parent="GameScene/WorkSpace/SubViewportContainer2/SubViewport" instance=ExtResource("11_ejne7")]
+
+[node name="ParticleSprite" type="Sprite2D" parent="GameScene/WorkSpace/SubViewportContainer2"]
+visible = false
+material = SubResource("ShaderMaterial_vtcv4")
+position = Vector2(86, 65.5)
+scale = Vector2(6, 6)
+texture = ExtResource("12_6snk1")
+
+[node name="CraftingTableButton" type="TextureButton" parent="GameScene"]
+offset_left = 1180.0
+offset_top = 652.0
+offset_right = 1262.0
+offset_bottom = 734.0
+texture_normal = ExtResource("10_u4yik")
+stretch_mode = 0
+
+[node name="GUILayer" type="CanvasLayer" parent="."]
+layer = 3
+script = SubResource("GDScript_biu8m")
+
+[node name="EmeraldSprite" type="Sprite2D" parent="GUILayer"]
+position = Vector2(36, 39)
+scale = Vector2(3, 3)
+texture = ExtResource("15_6qgt2")
+
+[node name="Label" type="Label" parent="GUILayer/EmeraldSprite"]
+offset_left = 10.3333
+offset_top = -2.66667
+offset_right = 28.3333
+offset_bottom = 21.3333
+scale = Vector2(0.4, 0.4)
+text = "0"
+label_settings = SubResource("LabelSettings_6nayt")
+
+[node name="CampassSprite" type="AnimatedSprite2D" parent="GUILayer"]
+position = Vector2(36, 96)
+scale = Vector2(3, 3)
+sprite_frames = SubResource("SpriteFrames_76ugr")
+frame_progress = 0.20204
+
+[node name="Label" type="Label" parent="GUILayer/CampassSprite"]
+offset_left = 10.6667
+offset_top = -3.0
+offset_right = 50.6667
+offset_bottom = 13.0
+scale = Vector2(0.4, 0.4)
+text = "3:00"
+label_settings = SubResource("LabelSettings_6nayt")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PausedButton" type="TextureButton" parent="GUILayer"]
+self_modulate = Color(0.815815, 0.815815, 0.815815, 1)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -55.0
+offset_top = 13.0
+offset_right = -15.0
+offset_bottom = 53.0
+grow_horizontal = 0
+texture_normal = ExtResource("17_ejtjb")
+stretch_mode = 0
+
+[node name="CraftingTableCanvasLayer" type="CanvasLayer" parent="."]
+process_mode = 4
+visible = false
+script = SubResource("GDScript_0awf5")
+
+[node name="ColorRect" type="ColorRect" parent="CraftingTableCanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.388235)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CraftingTableCanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -406.0
+offset_top = -130.0
+offset_right = 406.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+script = SubResource("GDScript_7coe7")
+
+[node name="RecipeMenu" type="Control" parent="CraftingTableCanvasLayer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 0
+script = SubResource("GDScript_48c35")
+
+[node name="Panel" type="Panel" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu"]
+texture_filter = 1
+layout_mode = 2
+offset_left = 54.0
+offset_right = 107.0
+offset_bottom = 79.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(3, 3)
+theme_override_styles/panel = SubResource("StyleBoxTexture_i6db6")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 18.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 3
+
+[node name="GridContainer" type="GridContainer" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu/Panel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 1
+theme_override_constants/v_separation = 1
+columns = 2
+
+[node name="CrafettingTable" type="TextureRect" parent="CraftingTableCanvasLayer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+mouse_filter = 0
+texture = ExtResource("1_d0ag6")
+expand_mode = 3
+script = SubResource("GDScript_qqnw0")
+
+[node name="SlotExport" type="Marker2D" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable"]
+position = Vector2(424, 139.5)
+
+[node name="GridContainer" type="GridContainer" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable"]
+layout_mode = 2
+anchor_left = 0.17
+anchor_top = 0.21
+anchor_right = 0.466
+anchor_bottom = 0.852
+offset_left = -0.0394974
+offset_top = 0.400002
+offset_right = 1502.74
+offset_bottom = 1503.48
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.1, 0.1)
+theme_override_constants/h_separation = 64
+theme_override_constants/v_separation = 64
+columns = 3
+
+[node name="Button" type="Button" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 361.0
+offset_top = 83.0
+offset_right = -82.0
+offset_bottom = -67.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_yk1vo")
+flat = true
+
+[node name="TargetItem" type="TextureRect" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable/Button"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 27.0
+offset_right = 85.0
+offset_bottom = 82.0
+expand_mode = 1
+
+[node name="TargetItemNumber" type="Label" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable/Button/TargetItem"]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -33.0
+offset_top = -18.0
+offset_right = 7.0
+offset_bottom = 6.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "0"
+label_settings = SubResource("LabelSettings_apjou")
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="ReturnButton" type="TextureButton" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable"]
+self_modulate = Color(0.494331, 0.494331, 0.494331, 1)
+layout_mode = 0
+offset_left = 506.0
+offset_top = 18.0
+offset_right = 537.0
+offset_bottom = 49.0
+texture_normal = ExtResource("18_dfxmm")
+stretch_mode = 0
+
+[node name="RecipeListButton" type="TextureButton" parent="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable"]
+visible = false
+layout_mode = 0
+offset_left = 21.0
+offset_top = 203.5
+offset_right = 60.0
+offset_bottom = 240.5
+texture_normal = ExtResource("22_5e8ul")
+texture_pressed = ExtResource("21_vedkp")
+stretch_mode = 0
+
+[node name="TimeoutUI" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 50
+visible = false
+script = SubResource("GDScript_oaojv")
+
+[node name="ColorRect" type="ColorRect" parent="TimeoutUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Label" type="Label" parent="TimeoutUI/ColorRect"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -78.0
+offset_top = -66.5
+offset_right = 114.0
+offset_bottom = -2.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "时间到"
+label_settings = SubResource("LabelSettings_4vk3n")
+
+[node name="Label" type="Label" parent="TimeoutUI/ColorRect/Label"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -63.0
+offset_top = 48.0
+offset_right = 97.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.75, 0.75)
+text = "今天结束了"
+label_settings = SubResource("LabelSettings_hjcmh")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ExitButton" type="Button" parent="TimeoutUI"]
+custom_minimum_size = Vector2(150, 0)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = 205.5
+offset_right = 12.0
+offset_bottom = 228.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("16_dlhgu")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_7mp0t")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ebiqk")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/normal = SubResource("StyleBoxTexture_bxdfi")
+
+[node name="Label" type="Label" parent="TimeoutUI/ExitButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -18.5
+offset_top = -5.0
+offset_right = 141.5
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "返回菜单"
+label_settings = SubResource("LabelSettings_ujvca")
+
+[node name="PausedMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 50
+visible = false
+script = SubResource("GDScript_uquha")
+
+[node name="ColorRect" type="ColorRect" parent="PausedMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Label2" type="Label" parent="PausedMenu/ColorRect"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -137.0
+offset_top = -139.5
+offset_right = 23.0
+offset_bottom = -107.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+text = "游戏菜单"
+label_settings = SubResource("LabelSettings_eyr5d")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PausedMenu"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -224.0
+offset_top = 140.5
+offset_right = 13.0
+offset_bottom = 196.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+theme_override_constants/separation = 8
+
+[node name="ContinueButton" type="Button" parent="PausedMenu/VBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("16_dlhgu")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_7mp0t")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ebiqk")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/normal = SubResource("StyleBoxTexture_bxdfi")
+
+[node name="Label" type="Label" parent="PausedMenu/VBoxContainer/ContinueButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -18.5
+offset_top = -4.5
+offset_right = 141.5
+offset_bottom = 27.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "继续游戏"
+label_settings = SubResource("LabelSettings_ujvca")
+
+[node name="ExitButton" type="Button" parent="PausedMenu/VBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("16_dlhgu")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_7mp0t")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ebiqk")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_kytjl")
+theme_override_styles/normal = SubResource("StyleBoxTexture_bxdfi")
+
+[node name="Label" type="Label" parent="PausedMenu/VBoxContainer/ExitButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -18.5
+offset_top = -5.0
+offset_right = 141.5
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "返回菜单"
+label_settings = SubResource("LabelSettings_ujvca")
+
+[connection signal="timeout" from="GameScene/GameTimer" to="." method="_on_game_timer_timeout"]
+[connection signal="timeout" from="GameScene/Characters/Timer" to="GameScene/Characters" method="_on_timer_timeout"]
+[connection signal="gui_input" from="GameScene/SmithyHouse/Marker2D/IronWorkerVillager/CheckBox" to="GameScene/SmithyHouse/Marker2D/IronWorkerVillager" method="_on_check_box_gui_input"]
+[connection signal="finished" from="GameScene/WorkSpace/SubViewportContainer/SubViewport/FurnaceScene" to="GameScene/WorkSpace/SubViewportContainer" method="_on_furnace_scene_finished"]
+[connection signal="destoried" from="GameScene/WorkSpace/SubViewportContainer2/SubViewport/ChoppingBlock" to="GameScene/WorkSpace/SubViewportContainer2" method="_on_chopping_block_destoried"]
+[connection signal="pressed" from="GameScene/CraftingTableButton" to="GameScene" method="_on_creafetting_table_button_pressed"]
+[connection signal="pressed" from="GUILayer/PausedButton" to="GUILayer" method="_on_paused_button_pressed"]
+[connection signal="select_item" from="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu" to="CraftingTableCanvasLayer" method="_on_recipe_menu_select_item"]
+[connection signal="crafted_item" from="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable" to="CraftingTableCanvasLayer" method="_on_crafetting_table_crafted_item"]
+[connection signal="pressed" from="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable/Button" to="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable" method="_on_button_pressed"]
+[connection signal="pressed" from="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable/ReturnButton" to="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable" method="_on_return_button_pressed"]
+[connection signal="pressed" from="CraftingTableCanvasLayer/HBoxContainer/CrafettingTable/RecipeListButton" to="CraftingTableCanvasLayer" method="_on_recipe_list_button_pressed"]
+[connection signal="pressed" from="TimeoutUI/ExitButton" to="TimeoutUI" method="_on_exit_button_pressed"]
+[connection signal="pressed" from="PausedMenu/VBoxContainer/ContinueButton" to="PausedMenu" method="_on_continue_button_pressed"]
+[connection signal="pressed" from="PausedMenu/VBoxContainer/ExitButton" to="PausedMenu" method="_on_exit_button_pressed"]

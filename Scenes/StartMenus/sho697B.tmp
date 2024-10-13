@@ -1,0 +1,460 @@
+[gd_scene load_steps=17 format=3 uid="uid://dwhs4hyoemtk"]
+
+[ext_resource type="Texture2D" uid="uid://dnkxw0877x7hg" path="res://Graphics/shop_background.png" id="1_7bsho"]
+[ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="3_406a2"]
+[ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="5_g0ryk"]
+[ext_resource type="Texture2D" uid="uid://cranl7y14bn3d" path="res://Graphics/UI/join.png" id="7_18qqm"]
+[ext_resource type="Texture2D" uid="uid://n2ytkgauhjg3" path="res://Graphics/Item/emerald.png" id="7_gba3a"]
+[ext_resource type="Texture2D" uid="uid://ciyarbruv7xfo" path="res://Graphics/UI/join_highlighted.png" id="8_fpc4r"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="8_jwn7w"]
+
+[sub_resource type="GDScript" id="GDScript_ump2o"]
+script/source = "extends Control;
+
+@onready var description_label: Label = $CanvasLayer/DescriptionLabel;
+@onready var value_label: Label = %ValueLabel;
+@onready var buy_button: Button = $CanvasLayer/HBoxContainer2/BuyButton;
+@onready var emerald_texture_sprite : TextureRect = $CanvasLayer/HBoxContainer2/CenterContainer/TextureRect;
+
+var target_item_updrade_data : UpgradeItem = null;
+var page_list : Array[Control] = [];
+
+var page1 : int = create_page();
+var page2 : int = create_page();
+var page3 : int = -1;
+var currect_page = -1;
+
+const SOUND_YES : Array[AudioStream] = [
+	preload(\"res://Audio/VilligerSound/Villager_yes1.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes2.ogg\"),
+	preload(\"res://Audio/VilligerSound/Villager_yes3.ogg\")
+];
+
+func _ready() -> void:
+	open_page(page1);
+	
+	var iron_upgrade : UpgradeItem = UpgradeItem.new(\"iron_upgrade\");
+	iron_upgrade.append(\"铁匠进阶\", preload(\"res://Graphics/Item/Iron/iron_pickaxe.png\"), \\
+		70, \"这个升级能够让你制作铁制工具\\r顾客会要求你提供新的道具\");
+	iron_upgrade.append(\"高阶铁匠技术\", preload(\"res://Graphics/Item/Iron/iron_chestplate.png\"), \\
+		250, \"这个升级能够让你制作铁制装备\\r顾客会要求你提供新的道具\");
+	# 铁匠工艺大师
+	
+	var gold_upgrade : UpgradeItem = UpgradeItem.new(\"gold_upgrade\");
+	gold_upgrade.append(\"黄金工艺\", preload(\"res://Graphics/Item/Gold/gold_ingot.png\"), \\
+		450, \"这个升级使你能够解锁黄金,并让你学会制作黄金装备\\r顾客会要求你提供新的道具\");
+	gold_upgrade.append(\"璀璨黄金工法\", preload(\"res://Graphics/Item/Gold/golden_chestplate.png\"), \\
+		1000, \"这个升级能够让你制作黄金装备\\r顾客会要求你提供新的道具\");
+	
+	var diamond_upgrade : UpgradeItem = UpgradeItem.new(\"diamond_upgrade\");
+	diamond_upgrade.append(\"钻石矿工\", preload(\"res://Graphics/Item/Diamond/diamond.png\"), \\
+		1500, \"这个升级能够让你采掘钻石\\r顾客会要求你提供新的道具\");
+	diamond_upgrade.append(\"珠宝匠人\", preload(\"res://Graphics/Item/Diamond/diamond_sword.png\"), \\
+		2000, \"这个升级能够让你制作钻石装备\\r顾客会要求你提供新的道具\");
+	
+	create_button(iron_upgrade, Vector2(110, 500), page1);
+	create_button(gold_upgrade, Vector2(280, 450), page1);
+	create_button(diamond_upgrade, Vector2(430, 480), page1);
+	
+	var furnace_append : UpgradeItem = UpgradeItem.new(\"furnace_append\");
+	furnace_append.append(\"熔炉x2\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+		50, \"购置一个新熔炉, 工作效率翻倍\");
+	furnace_append.append(\"熔炉x3\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+		500, \"两个熔炉还不够, 再新增一个或许更好\");
+	furnace_append.append(\"熔炉x4\", preload(\"res://Graphics/Item/Block/furnace.png\"), \\
+		800, \"火力全开! 让你同时拥有4个熔炉\");
+	
+	var furnace_capacity : UpgradeItem = UpgradeItem.new(\"furnace_capacity\");
+	furnace_capacity.append(\"容量升级\", preload(\"res://Graphics/Item/hopper.png\"), \\
+		250, \"提升你熔炉的容量, 使其可以同时烧制4个矿石.\");
+	furnace_capacity.append(\"容量升级\", preload(\"res://Graphics/Item/hopper.png\"), \\
+		450, \"根本用不过来!!!\\n同时烧制8个矿石.\");
+	
+	var furnace_upgrade : UpgradeItem = UpgradeItem.new(\"furnace_upgrade\");
+	furnace_upgrade.append(\"高炉\", preload(\"res://Graphics/Item/Block/blast_furnace.png\"), \\
+		1500, \"将你的熔炉升级为高炉,将融化矿物的时间是缩减至原先的一半\");
+	
+	create_button(furnace_capacity, Vector2(875, 460), page1);
+	create_button(furnace_upgrade, Vector2(1000, 500), page1);
+	create_button(furnace_append, Vector2(1125, 475), page1);
+	
+	## page2
+	var slashers_upgrade : UpgradeItem = UpgradeItem.new(\"slashers_upgrade\");
+	slashers_upgrade.append(\"锯木机\", preload(\"res://Graphics/Item/Block/slashers.png\"), \\
+		400, \"忘记你的手臂!\\r术业有专攻,锯木机能够自动帮你锯木材\");
+	
+	var ironworker_upgrade : UpgradeItem = UpgradeItem.new(\"ironworker_upgrade\");
+	ironworker_upgrade.append(\"培训\", preload(\"res://Graphics/Item/light_block.png\"), \\
+		1500, \"不能再躺平了!培训一下这个慵懒的铁匠, 让它知道你究竟需要什么东西\");
+	
+	var knowledge_book : UpgradeItem = UpgradeItem.new(\"knowledge_book\");
+	knowledge_book.append(\"知识之书\", preload(\"res://Graphics/Item/knowledge_book.png\"), \\
+		600, \"这本书充满知识, 能够记录你在一局内制作的物品合成配方\");
+	#850
+	
+	create_button(ironworker_upgrade, Vector2(110, 500), page2);
+	create_button(slashers_upgrade, Vector2(280, 450), page2);
+	create_button(knowledge_book, Vector2(430, 480), page2);
+	
+	var value_upgrade : UpgradeItem = UpgradeItem.new(\"value_upgrade\");
+	value_upgrade.append(\"市场升值\", preload(\"res://Graphics/Item/Block/iron_block.png\"), \\
+		100, \"供不应求, 提升你卖出物品售价至125%\");
+	value_upgrade.append(\"品质提升\", preload(\"res://Graphics/Item/Block/glod_block.png\"), \\
+		800, \"经过精心打磨, 提升物品品质, 物品的整体售价提升至150%\");
+	value_upgrade.append(\"稀有化\", preload(\"res://Graphics/Item/Block/diamond_block.png\"), \\
+		1500, \"市场热潮不可阻挡, 提升物品售价为原来的200%\");
+	value_upgrade.append(\"终极奉献\", preload(\"res://Graphics/Item/Block/netherite_block.png\"), \\
+		2500, \"想象过成为铁匠传奇吗? 提升物品售价为原来的350%\");
+	
+	var log_quick_filling : UpgradeItem = UpgradeItem.new(\"log_quick_filling\");
+	log_quick_filling.append(\"快速装填\", preload(\"res://Graphics/Item/Block/log.png\"), \\
+		75, \"调度你的伐木工,加速木材的填充速度\");
+	log_quick_filling.append(\"急速装填\", preload(\"res://Graphics/Item/Block/log.png\"), \\
+		200, \"去工作!终于不用等很久了\");
+	
+	var auto_smelt : UpgradeItem = UpgradeItem.new(\"auto_smelt\");
+	auto_smelt.append(\"自动熔炼\", preload(\"res://Graphics/Item/Block/piston.png\"), \\
+		800, \"自动将矿石送到熔炉内\");
+	
+	create_button(log_quick_filling, Vector2(1000, 500), page2);
+	create_button(value_upgrade, Vector2(1125, 475), page2);
+
+
+class UpgradeItem : 
+	var item_list : Array[Dictionary] = [];
+	var upgrade_count : int = 0;
+	var item_id : String = \"\";
+	var item_button : BaseButton = null;
+	func _init(upgrade_item_id) -> void: 
+		item_id = upgrade_item_id;
+		if (!Global.upgrade_list.has(item_id)) : 
+			return;
+		upgrade_count = Global.upgrade_list[item_id];
+	
+	func append(display_text : String, display_texture : Texture2D, value : int, description : String) : 
+		var data : Dictionary = {
+			\"display_text\" : display_text,
+			\"display_texture\" : display_texture,
+			\"value\" : value,
+			\"description\" : description
+		};
+		item_list.append(data);
+	const SHOP_BUTTON = preload(\"res://Scenes/StartMenus/shop_button.tscn\");
+	
+	func create_button(pos : Vector2) -> BaseButton : 
+		if (item_button != null) : return;
+		var button : BaseButton = SHOP_BUTTON.instantiate();
+		item_button = button;
+		button.global_position = pos;
+		if ( upgrade_count >= item_list.size()  ) : 
+			upgrade_count = min(upgrade_count, item_list.size()-1);
+			button.disabled = true;
+		button.text = item_list[upgrade_count][\"display_text\"];
+		button.texture = item_list[upgrade_count][\"display_texture\"];
+		
+		button.item_upgrade_data = self;
+		return button;
+	
+	func update_button() : 
+		if (item_button == null) : return;
+		if (upgrade_count >= item_list.size()) : 
+			item_button.disabled = true;
+			return;
+		item_button.text = item_list[upgrade_count][\"display_text\"];
+		item_button.texture = item_list[upgrade_count][\"display_texture\"];
+
+@onready var page_next_button: TextureButton = $CanvasLayer/HBoxContainer3/PageNextButton;
+@onready var page_back_button: TextureButton = $CanvasLayer/HBoxContainer3/PageBackButton;
+func open_page(id : int) : 
+	for p : Control in page_list : 
+		p.visible = false;
+	page_list[id].visible = true;
+	if (currect_page != id) : 
+		currect_page = id;
+		set_target_upgrade_item(null);
+	
+	page_back_button.visible = true;
+	page_next_button.visible = true;
+	if (id >= page_list.size()-1) : 
+		page_next_button.visible = false;
+	if (id <= 0) : 
+		page_back_button.visible = false;
+
+func create_page() -> int : 
+	var page_node : Control = Control.new();
+	page_node.mouse_filter = Control.MOUSE_FILTER_IGNORE;
+	add_child(page_node);
+	page_list.append(page_node);
+	return page_list.size() - 1;
+
+func create_button(upgrade_item_data : UpgradeItem , pos : Vector2, page : int = -1) : 
+	var button : BaseButton = upgrade_item_data.create_button(pos);
+	if (button) : 
+		button.signal_button_pressed.connect(set_target_upgrade_item);
+		if (page > -1) : 
+			page_list[page].add_child(button);
+		else : 
+			self.add_child(button);
+
+func set_target_upgrade_item(item : UpgradeItem) : 
+	if (item == null || item.upgrade_count >= item.item_list.size()) : 
+		description_label.text = \"\";
+		value_label.text = \"\";
+		buy_button.disabled = true;
+		emerald_texture_sprite.hide();
+		if (item != null) : 
+			item.item_button.disabled = true;
+		return;
+	AudioManager.play_global_audio(CLICK_SOUND);
+	description_label.text = item.item_list[item.upgrade_count][\"description\"];
+	value_label.text = str(item.item_list[item.upgrade_count][\"value\"]);
+	buy_button.disabled = (Global.emerald_count - item.item_list[item.upgrade_count][\"value\"]) < 0;
+	emerald_texture_sprite.show();
+	target_item_updrade_data = item;
+
+func _on_buy_button_pressed() -> void : 
+	AudioManager.play_global_audio(CLICK_SOUND);
+	AudioManager.play_global_audio(SOUND_YES[randi() % SOUND_YES.size()]);
+	if (target_item_updrade_data == null) : return;
+	if (target_item_updrade_data.upgrade_count < target_item_updrade_data.item_list.size()) : 
+		Global.emerald_count -= target_item_updrade_data.item_list[target_item_updrade_data.upgrade_count][\"value\"];
+		target_item_updrade_data.upgrade_count += 1;
+		Global.set_upgrade(target_item_updrade_data.item_id, target_item_updrade_data.upgrade_count);
+		Global.save_game();
+	else : 
+		target_item_updrade_data.item_button.disabled = true;
+		target_item_updrade_data = null;
+	set_target_upgrade_item(target_item_updrade_data);
+	target_item_updrade_data.update_button();
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"main_menu\"));
+"
+
+[sub_resource type="GDScript" id="GDScript_2d2tk"]
+script/source = "extends CanvasLayer;
+@onready var emerald_count_label: Label = $HBoxContainer/EmeraldCountLabel;
+@onready var shop_menu: Control = $\"..\";
+
+var emerald_count : float = 0.0;
+var label_emerald_count : float = 0.0 : 
+	set(value) : 
+		label_emerald_count = value;
+		emerald_count_label.text = str(round(value));
+
+func _process(delta: float) -> void:
+	if (emerald_count != Global.emerald_count) : 
+		var tween : Tween = get_tree().create_tween();
+		emerald_count = Global.emerald_count;
+		tween.tween_property(self, \"label_emerald_count\", emerald_count, 1.0).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_page_back_button_pressed() -> void:
+	shop_menu.open_page(shop_menu.currect_page-1);
+	AudioManager.play_global_audio(CLICK_SOUND);
+func _on_page_next_button_pressed() -> void:
+	shop_menu.open_page(shop_menu.currect_page+1);
+	AudioManager.play_global_audio(CLICK_SOUND);
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_5e4mp"]
+font = ExtResource("8_jwn7w")
+font_size = 24
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="LabelSettings" id="LabelSettings_hf1an"]
+font = ExtResource("8_jwn7w")
+font_size = 32
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="LabelSettings" id="LabelSettings_l5i6a"]
+font = ExtResource("8_jwn7w")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xvaml"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_nenss"]
+texture = ExtResource("3_406a2")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sik3p"]
+texture = ExtResource("5_g0ryk")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4fv8l"]
+texture = ExtResource("5_g0ryk")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[node name="ShopMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_ump2o")
+
+[node name="ShopBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_right = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_7bsho")
+expand_mode = 1
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+script = SubResource("GDScript_2d2tk")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -96.0
+offset_top = 2.0
+offset_right = -10.0
+offset_bottom = 66.0
+grow_horizontal = 0
+
+[node name="EmeraldTexture" type="TextureRect" parent="CanvasLayer/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("7_gba3a")
+expand_mode = 3
+
+[node name="EmeraldCountLabel" type="Label" parent="CanvasLayer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "0"
+label_settings = SubResource("LabelSettings_5e4mp")
+
+[node name="DescriptionLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 127.0
+offset_top = -109.0
+offset_right = -562.0
+grow_horizontal = 2
+grow_vertical = 0
+label_settings = SubResource("LabelSettings_hf1an")
+autowrap_mode = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer"]
+offset_left = 328.0
+offset_top = 681.0
+offset_right = 795.0
+offset_bottom = 707.0
+scale = Vector2(2, 2)
+size_flags_horizontal = 8
+theme_override_constants/separation = 0
+alignment = 2
+
+[node name="ValueLabel" type="Label" parent="CanvasLayer/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 1
+label_settings = SubResource("LabelSettings_l5i6a")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/HBoxContainer2/CenterContainer"]
+visible = false
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+texture = ExtResource("7_gba3a")
+
+[node name="BuyButton" type="Button" parent="CanvasLayer/HBoxContainer2"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("8_jwn7w")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_xvaml")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_nenss")
+theme_override_styles/hover = SubResource("StyleBoxTexture_sik3p")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_nenss")
+theme_override_styles/normal = SubResource("StyleBoxTexture_4fv8l")
+text = "购买"
+
+[node name="ExitButton" type="TextureButton" parent="CanvasLayer"]
+offset_left = 18.0
+offset_top = 15.0
+offset_right = 75.0
+offset_bottom = 72.0
+texture_normal = ExtResource("7_18qqm")
+texture_pressed = ExtResource("8_fpc4r")
+texture_hover = ExtResource("8_fpc4r")
+stretch_mode = 6
+flip_h = true
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="PageBackButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = ExtResource("7_18qqm")
+texture_pressed = ExtResource("8_fpc4r")
+texture_hover = ExtResource("8_fpc4r")
+stretch_mode = 5
+flip_h = true
+
+[node name="PageNextButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 4
+texture_normal = ExtResource("7_18qqm")
+texture_pressed = ExtResource("8_fpc4r")
+texture_hover = ExtResource("8_fpc4r")
+stretch_mode = 5
+
+[connection signal="pressed" from="CanvasLayer/HBoxContainer2/BuyButton" to="." method="_on_buy_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageBackButton" to="CanvasLayer" method="_on_page_back_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageNextButton" to="CanvasLayer" method="_on_page_next_button_pressed"]

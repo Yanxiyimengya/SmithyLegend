@@ -1,16 +1,21 @@
-[gd_scene load_steps=15 format=3 uid="uid://bbyak2wetx75r"]
+[gd_scene load_steps=24 format=3 uid="uid://bbyak2wetx75r"]
 
 [ext_resource type="Texture2D" uid="uid://c7wff5vs2b73" path="res://Graphics/MainMenu.png" id="1_livov"]
 [ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="2_ubsdj"]
 [ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_u6voo"]
 [ext_resource type="Texture2D" uid="uid://cranl7y14bn3d" path="res://Graphics/UI/join.png" id="4_cy1cy"]
 [ext_resource type="Texture2D" uid="uid://ciyarbruv7xfo" path="res://Graphics/UI/join_highlighted.png" id="5_a3tcu"]
+[ext_resource type="Texture2D" uid="uid://dichorub38tc2" path="res://Graphics/Item/gear.png" id="6_g5ikc"]
+[ext_resource type="Texture2D" uid="uid://b1g2vgtt6335o" path="res://Graphics/UI/short_button.png" id="7_gq2cy"]
+[ext_resource type="Texture2D" uid="uid://rjjal6rs815o" path="res://Graphics/UI/short_button_bottom.png" id="8_jutq1"]
 
 [sub_resource type="GDScript" id="GDScript_ku11u"]
-script/source = "extends Control
+script/source = "extends Control;
 @onready var update_animation_player: AnimationPlayer = $UpdateAnimationPlayer;
 @onready var emerald_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer/Count;
 @onready var day_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer2/Count
+@onready var game_process_label: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer3/Count;
+@onready var play_time_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer4/Count;
 
 const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
 
@@ -18,10 +23,17 @@ func _ready() -> void:
 	update_animation_player.play(&\"UpdateAnim\");
 	emerald_count.text = str(Global.emerald_count);
 	day_count.text = str(Global.day);
+	
+	game_process_label.text = str(floor(Global.game_progress)) + \"%\";
+	
+	var second_str : String = str(Global.game_time%60);
+	if (second_str.length() < 2) : 
+		second_str = \"0\" + second_str;
+	play_time_count.text = str(Global.game_time/60) + \":\" + second_str;
 
 func _on_furnace_button_pressed() -> void:
 	AudioManager.play_global_audio(CLICK_SOUND);
-	SceneManager.change_scene_form_packed(preload(\"res://Scenes/Game/game.tscn\"));
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"game\"));
 func _on_furnace_button_mouse_entered() -> void:
 	get_tree().create_tween().tween_property($FurnaceEffectHightLightPolygon, \"color:a\", 0.2, 0.05);
 func _on_furnace_button_mouse_exited() -> void:
@@ -29,7 +41,7 @@ func _on_furnace_button_mouse_exited() -> void:
 
 
 func _on_girnd_button_pressed() -> void:
-	SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/shop_menu.tscn\"));
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"shop_menu\"));
 	AudioManager.play_global_audio(CLICK_SOUND);
 func _on_girnd_button_mouse_entered() -> void:
 	get_tree().create_tween().tween_property($GirndStoneHightLightPolygon, \"color:a\", 0.2, 0.05);
@@ -38,7 +50,7 @@ func _on_girnd_button_mouse_exited() -> void:
 
 func _on_exit_button_pressed() -> void:
 	AudioManager.play_global_audio(CLICK_SOUND);
-	SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/start_menu_2.tscn\"));
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"start_menu\"));
 "
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6csjn"]
@@ -112,6 +124,78 @@ _data = {
 "RESET": SubResource("Animation_lpl3p"),
 "UpdateAnim": SubResource("Animation_sbsa8")
 }
+
+[sub_resource type="GDScript" id="GDScript_4jh5n"]
+script/source = "extends CanvasLayer;
+@onready var setting_button: TextureButton = $MarginContainer2/SettingButton;
+@onready var setting_menu: PanelContainer = $SettingMenu;
+@onready var bgm_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar;
+@onready var sound_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar;
+
+var openned : bool = false;
+var openning : bool = false;
+
+func _ready() -> void:
+	bgm_slider_bar.value = Global.bgm_volume;
+	sound_slider_bar.value = Global.sound_volume;
+	bgm_slider_bar.drag_ended.connect(func(c: bool) : 
+		Global.save_game();
+	);
+	sound_slider_bar.drag_ended.connect(func(c: bool) : 
+		Global.save_game();
+	);
+
+func _on_setting_button_pressed() -> void : 
+	if (!openning) : 
+		openning = true;
+		var tween : Tween = get_tree().create_tween().set_parallel();
+		if (openned) : 
+			tween.tween_property(setting_menu, \"position:x\", 1280.0, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+			tween.tween_property(setting_menu, \"modulate:a\", 0.0, 0.2);
+		else :
+			tween.tween_property(setting_menu, \"position:x\", 940.0, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+			tween.tween_property(setting_menu, \"modulate:a\", 1.0, 0.2);
+		openned = !openned;
+		await tween.finished;
+		openning = false;
+
+func _on_bgm_slider_bar_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"BGM\"),value);
+	Global.bgm_volume = value;
+
+func _on_sound_slider_bar_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"Sound\"),value);
+	Global.sound_volume = value;
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_lbcpq"]
+line_spacing = 4.0
+font = ExtResource("3_u6voo")
+font_size = 24
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3pa43"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_lid56"]
+font = ExtResource("3_u6voo")
+font_size = 24
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qbwaj"]
+texture = ExtResource("8_jutq1")
+texture_margin_left = 1.0
+texture_margin_top = 1.0
+texture_margin_right = 1.0
+texture_margin_bottom = 1.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2cwn8"]
+border_width_left = 1
+border_color = Color(0, 0, 0, 1)
+expand_margin_top = 3.0
+expand_margin_bottom = 3.0
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -323,6 +407,100 @@ texture_hover = ExtResource("5_a3tcu")
 stretch_mode = 6
 flip_h = true
 
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+script = SubResource("GDScript_4jh5n")
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -281.0
+offset_top = -57.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "版本号:1.0.8[测试]
+作者:B站 - 烟汐忆梦_YM
+不得以盈利为目的二次分发,宣传"
+label_settings = SubResource("LabelSettings_lbcpq")
+
+[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -51.0
+offset_bottom = 51.0
+grow_horizontal = 0
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+
+[node name="SettingButton" type="TextureButton" parent="CanvasLayer/MarginContainer2"]
+layout_mode = 2
+texture_normal = ExtResource("6_g5ikc")
+stretch_mode = 0
+
+[node name="SettingMenu" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 1280.0
+offset_top = 62.0
+offset_right = 1605.0
+offset_bottom = 114.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_3pa43")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SettingMenu"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/SettingMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "背景音乐音量"
+label_settings = SubResource("LabelSettings_lid56")
+
+[node name="BGMSliderBar" type="HSlider" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_icons/grabber = ExtResource("7_gq2cy")
+theme_override_icons/grabber_highlight = ExtResource("7_gq2cy")
+theme_override_icons/grabber_disabled = ExtResource("7_gq2cy")
+theme_override_icons/tick = ExtResource("7_gq2cy")
+theme_override_styles/slider = SubResource("StyleBoxTexture_qbwaj")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_2cwn8")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_2cwn8")
+min_value = -60.0
+max_value = 0.0
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer/SettingMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "音效音量"
+label_settings = SubResource("LabelSettings_lid56")
+
+[node name="SoundSliderBar" type="HSlider" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_icons/grabber = ExtResource("7_gq2cy")
+theme_override_icons/grabber_highlight = ExtResource("7_gq2cy")
+theme_override_icons/grabber_disabled = ExtResource("7_gq2cy")
+theme_override_icons/tick = ExtResource("7_gq2cy")
+theme_override_styles/slider = SubResource("StyleBoxTexture_qbwaj")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_2cwn8")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_2cwn8")
+min_value = -60.0
+max_value = 0.0
+
 [connection signal="mouse_entered" from="FurnaceButton" to="." method="_on_furnace_button_mouse_entered"]
 [connection signal="mouse_exited" from="FurnaceButton" to="." method="_on_furnace_button_mouse_exited"]
 [connection signal="pressed" from="FurnaceButton" to="." method="_on_furnace_button_pressed"]
@@ -330,3 +508,6 @@ flip_h = true
 [connection signal="mouse_exited" from="GirndButton" to="." method="_on_girnd_button_mouse_exited"]
 [connection signal="pressed" from="GirndButton" to="." method="_on_girnd_button_pressed"]
 [connection signal="pressed" from="ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/MarginContainer2/SettingButton" to="CanvasLayer" method="_on_setting_button_pressed"]
+[connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar" to="CanvasLayer" method="_on_bgm_slider_bar_value_changed"]
+[connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar" to="CanvasLayer" method="_on_sound_slider_bar_value_changed"]

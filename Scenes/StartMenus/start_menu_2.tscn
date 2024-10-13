@@ -72,7 +72,7 @@ func _input(event: InputEvent) -> void :
 			if (process > 290) : 
 				animation_player.play(&\"Starting\");
 				startting = true;
-				SceneManager.change_scene_form_packed(preload(\"res://Scenes/StartMenus/main_menu.tscn\"));
+				SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"main_menu\"));
 	elif (dragging && event is InputEventMouseMotion) : 
 		if (event.button_mask == MOUSE_BUTTON_MASK_LEFT) : 
 			process -= event.relative.y;
@@ -264,6 +264,7 @@ libraries = {
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("1_t5j8v")
+bus = &"BGM"
 parameters/looping = false
 
 [node name="Timer" type="Timer" parent="."]

@@ -29,10 +29,10 @@ static func init() -> void:
 	Global.item_dict["copper_ingot"]["value"] = 1;
 	# 铜锭
 	Global.register_item("iron_ingot", preload("res://Graphics/Item/Iron/iron_ingot.png"));
-	Global.item_dict["iron_ingot"]["value"] = 1;
+	Global.item_dict["iron_ingot"]["value"] = 2;
 	# 铁锭
 	Global.register_item("gold_ingot", preload("res://Graphics/Item/Gold/gold_ingot.png"));
-	Global.item_dict["gold_ingot"]["value"] = 2;
+	Global.item_dict["gold_ingot"]["value"] = 3;
 	# 金锭
 	Global.register_item("log", preload("res://Graphics/Item/Block/log.png"));
 	Global.item_dict["log"]["value"] = 1;
@@ -43,89 +43,94 @@ static func init() -> void:
 	Global.register_item("stick", preload("res://Graphics/Item/stick.png"));
 	Global.item_dict["stick"]["value"] = 1;
 	# 木棍	
+	
+	Global.register_item("bucket", preload("res://Graphics/Item/Iron/bucket.png"));
+	Global.item_dict["bucket"]["value"] = 7;
+	# 铁桶
+	
 	#region 工具装备
 	Global.register_item("iron_sword", preload("res://Graphics/Item/Iron/iron_sword.png"));
-	Global.item_dict["iron_sword"]["value"] = 4+3;
+	Global.item_dict["iron_sword"]["value"] = 8;
 	# 铁剑
 	Global.register_item("iron_pickaxe", preload("res://Graphics/Item/Iron/iron_pickaxe.png"));
-	Global.item_dict["iron_pickaxe"]["value"] = 6+3;
+	Global.item_dict["iron_pickaxe"]["value"] = 10;
 	# 铁镐
 	Global.register_item("iron_axe", preload("res://Graphics/Item/Iron/iron_axe.png"));
-	Global.item_dict["iron_axe"]["value"] = 6+3;
+	Global.item_dict["iron_axe"]["value"] = 10;
 	# 铁斧
 	Global.register_item("iron_shovel", preload("res://Graphics/Item/Iron/iron_shovel.png"));
-	Global.item_dict["iron_shovel"]["value"] = 4+3;
+	Global.item_dict["iron_shovel"]["value"] = 8;
 	# 铁铲
 	Global.register_item("iron_hoe", preload("res://Graphics/Item/Iron/iron_hoe.png"));
-	Global.item_dict["iron_hoe"]["value"] = 5+3;
+	Global.item_dict["iron_hoe"]["value"] = 9;
 	# 铁锄
 	Global.register_item("iron_helmet", preload("res://Graphics/Item/Iron/iron_helmet.png"));
-	Global.item_dict["iron_helmet"]["value"] = 7+2;
+	Global.item_dict["iron_helmet"]["value"] = 11;
 	# 铁头盔
 	Global.register_item("iron_chestplate", preload("res://Graphics/Item/Iron/iron_chestplate.png"));
-	Global.item_dict["iron_chestplate"]["value"] = 10+2;
+	Global.item_dict["iron_chestplate"]["value"] = 16;
 	# 铁胸甲
 	Global.register_item("iron_leggings", preload("res://Graphics/Item/Iron/iron_leggings.png"));
-	Global.item_dict["iron_leggings"]["value"] = 9+2;
+	Global.item_dict["iron_leggings"]["value"] = 14;
 	# 铁护腿
 	Global.register_item("iron_boots", preload("res://Graphics/Item/Iron/iron_boots.png"));
-	Global.item_dict["iron_boots"]["value"] = 6;
+	Global.item_dict["iron_boots"]["value"] = 9;
 	# 铁靴子
 	
 	Global.register_item("golden_sword", preload("res://Graphics/Item/Gold/golden_sword.png"));
-	Global.item_dict["golden_sword"]["value"] = 6+3;
+	Global.item_dict["golden_sword"]["value"] = 12;
 	# 金剑
 	Global.register_item("golden_pickaxe", preload("res://Graphics/Item/Gold/golden_pickaxe.png"));
-	Global.item_dict["golden_pickaxe"]["value"] = 9+3;
+	Global.item_dict["golden_pickaxe"]["value"] = 14;
 	# 金镐
 	Global.register_item("golden_axe", preload("res://Graphics/Item/Gold/golden_axe.png"));
-	Global.item_dict["golden_axe"]["value"] = 9+3;
+	Global.item_dict["golden_axe"]["value"] = 14;
 	# 金斧
 	Global.register_item("golden_shovel", preload("res://Graphics/Item/Gold/golden_shovel.png"));
-	Global.item_dict["golden_shovel"]["value"] = 6+3;
+	Global.item_dict["golden_shovel"]["value"] = 12;
 	# 金铲
 	Global.register_item("golden_hoe", preload("res://Graphics/Item/Gold/golden_hoe.png"));
-	Global.item_dict["golden_hoe"]["value"] = 7+3;
+	Global.item_dict["golden_hoe"]["value"] = 13;
 	# 金锄
 	Global.register_item("golden_helmet", preload("res://Graphics/Item/Gold/golden_helmet.png"));
-	Global.item_dict["golden_helmet"]["value"] = 12+2;
+	Global.item_dict["golden_helmet"]["value"] = 16;
 	# 金头盔
 	Global.register_item("golden_chestplate", preload("res://Graphics/Item/Gold/golden_chestplate.png"));
-	Global.item_dict["golden_chestplate"]["value"] = 18+2;
+	Global.item_dict["golden_chestplate"]["value"] = 22;
 	# 金胸甲
 	Global.register_item("golden_leggings", preload("res://Graphics/Item/Gold/golden_leggings.png"));
-	Global.item_dict["golden_leggings"]["value"] = 16+2;
+	Global.item_dict["golden_leggings"]["value"] = 20;
 	# 金护腿
 	Global.register_item("golden_boots", preload("res://Graphics/Item/Gold/golden_boots.png"));
-	Global.item_dict["golden_boots"]["value"] = 10+2;
+	Global.item_dict["golden_boots"]["value"] = 13;
 	# 金靴子
 	
 	Global.register_item("diamond_sword", preload("res://Graphics/Item/Diamond/diamond_sword.png"));
-	Global.item_dict["diamond_sword"]["value"] = 6+3;
+	Global.item_dict["diamond_sword"]["value"] = 20;
 	# 钻石剑
 	Global.register_item("diamond_pickaxe", preload("res://Graphics/Item/Diamond/diamond_pickaxe.png"));
-	Global.item_dict["diamond_pickaxe"]["value"] = 9+3;
+	Global.item_dict["diamond_pickaxe"]["value"] = 25;
 	# 钻石镐
 	Global.register_item("diamond_axe", preload("res://Graphics/Item/Diamond/diamond_axe.png"));
-	Global.item_dict["diamond_axe"]["value"] = 9+3;
+	Global.item_dict["diamond_axe"]["value"] = 25;
 	# 钻石斧
 	Global.register_item("diamond_shovel", preload("res://Graphics/Item/Diamond/diamond_shovel.png"));
-	Global.item_dict["diamond_shovel"]["value"] = 6+3;
+	Global.item_dict["diamond_shovel"]["value"] = 20;
 	# 钻石铲
 	Global.register_item("diamond_hoe", preload("res://Graphics/Item/Diamond/diamond_hoe.png"));
-	Global.item_dict["diamond_hoe"]["value"] = 7+3;
+	Global.item_dict["diamond_hoe"]["value"] = 22;
 	# 钻石锄
 	Global.register_item("diamond_helmet", preload("res://Graphics/Item/Diamond/diamond_helmet.png"));
-	Global.item_dict["diamond_helmet"]["value"] = 12+2;
+	Global.item_dict["diamond_helmet"]["value"] = 28;
 	# 钻石头盔
 	Global.register_item("diamond_chestplate", preload("res://Graphics/Item/Diamond/diamond_chestplate.png"));
-	Global.item_dict["diamond_chestplate"]["value"] = 18+2;
+	Global.item_dict["diamond_chestplate"]["value"] = 38;
 	# 钻石胸甲
 	Global.register_item("diamond_leggings", preload("res://Graphics/Item/Diamond/diamond_leggings.png"));
-	Global.item_dict["diamond_leggings"]["value"] = 16+2;
+	Global.item_dict["diamond_leggings"]["value"] = 33;
 	# 钻石护腿
 	Global.register_item("diamond_boots", preload("res://Graphics/Item/Diamond/diamond_boots.png"));
-	Global.item_dict["diamond_boots"]["value"] = 10+2;
+	Global.item_dict["diamond_boots"]["value"] = 24;
 	# 钻石靴子
 	#endregion
 

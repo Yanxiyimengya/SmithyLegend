@@ -9,6 +9,7 @@ signal finished(furnace : Node3D)
 @onready var f: Node3D = $FP;
 
 var furnace_list : Array[Node3D] = [];
+var furnace_capacity : int = 2;
 const FURNACE = preload(\"res://Scenes/Game/furnace_single.tscn\");
 
 func add_furnace(is_blastfurnace : bool) : 
@@ -22,6 +23,14 @@ func add_furnace(is_blastfurnace : bool) :
 	item.timeout.connect(func() : 
 		finished.emit(item);
 	);
+
+func get_idle_furnace(item_filter : String) -> Node3D : 
+	var free_count : int = 0;
+	for node : Node3D in furnace_list : 
+		free_count = furnace_capacity - node.item_count;
+		if (free_count > 0 && (node.item_type == item_filter || node.item_type == \"\")) : 
+			return node;
+	return null;
 
 func play_anim(anim : StringName) : 
 	animation_player.play(anim);

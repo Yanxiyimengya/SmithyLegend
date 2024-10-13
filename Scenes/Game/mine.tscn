@@ -15,6 +15,8 @@ shader_parameter/inset = 0.0
 [sub_resource type="GDScript" id="GDScript_etv8o"]
 script/source = "extends Sprite2D;
 
+signal pressed();
+
 @onready var grid_container: GridContainer = $DragRect/GridContainer;
 @onready var audio_stream_player_2d: AudioStreamPlayer2D = $AudioStreamPlayer2D;
 @onready var drag_rect: Control = $DragRect;
@@ -27,6 +29,7 @@ var x_rot : float = 0 :
 @export var item_texture : Texture2D = preload(\"res://Graphics/Item/Iron/raw_iron.png\");
 @export var item_type : String = \"\";
 var item_count : int = 0;
+var can_drag : bool = true;
 
 func _ready() -> void:
 	for i : int in round(8) : 
@@ -95,6 +98,12 @@ func reset_itemslot() :
 			item.visible = (i < item_count);
 			item.scale = Vector2.ONE;
 			item.modulate = Color.WHITE;
+
+
+func _on_drag_rect_gui_input(event: InputEvent) -> void:
+	if (event is InputEventScreenTouch) : 
+		if (event.is_released() && Rect2(Vector2.ZERO, drag_rect.size).has_point(event.position)) : 
+			pressed.emit();
 "
 
 [sub_resource type="AudioStreamPolyphonic" id="AudioStreamPolyphonic_ypj62"]
@@ -102,7 +111,7 @@ func reset_itemslot() :
 [sub_resource type="GDScript" id="GDScript_jlv61"]
 script/source = "extends Control;
 @onready var mine: Sprite2D = $\"..\";
-var dragging = false;
+var dragging : bool = false;
 
 func _ready() -> void:
 	DragManager.register_object(self);
@@ -115,7 +124,7 @@ func _ready() -> void:
 	);
 
 func _dm_drag_data(as_position : Vector2) : 
-	if (mine.item_count > 0) : 
+	if (mine.item_count > 0 && mine.can_drag) : 
 		var spr : Sprite2D = Sprite2D.new();
 		spr.texture = mine.item_texture;
 		spr.scale = Vector2.ONE * 4;
@@ -146,6 +155,7 @@ script = SubResource("GDScript_etv8o")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 stream = SubResource("AudioStreamPolyphonic_ypj62")
+bus = &"Sound"
 
 [node name="DragRect" type="Control" parent="."]
 layout_mode = 3
@@ -154,10 +164,9 @@ anchor_top = 0.233
 anchor_right = 0.905
 anchor_bottom = 1.071
 offset_left = -150.381
-offset_top = -187.375
+offset_top = -197.375
 offset_right = -150.405
 offset_bottom = -187.625
-mouse_filter = 2
 script = SubResource("GDScript_jlv61")
 
 [node name="GridContainer" type="GridContainer" parent="DragRect"]
@@ -175,3 +184,5 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(6, 6)
 columns = 2
+
+[connection signal="gui_input" from="DragRect" to="." method="_on_drag_rect_gui_input"]

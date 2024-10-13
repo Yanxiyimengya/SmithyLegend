@@ -25,6 +25,7 @@ var text : String = \"\" :
 	set(value) : 
 		text = value;
 		$HBoxContainer/Label.text = value;
+		$HBoxContainer/Label.visible = !value.is_empty();
 	get : 
 		return $HBoxContainer/Label.text;
 "
@@ -40,22 +41,25 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxTexture_hvwpm")
 script = SubResource("GDScript_3ejjn")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 5
 
-[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+[node name="MarginContainer" type="CenterContainer" parent="HBoxContainer"]
 layout_mode = 2
-theme_override_constants/margin_left = 5
+size_flags_horizontal = 3
 
 [node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer"]
+custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 texture = ExtResource("2_r62d4")
 expand_mode = 3
 
 [node name="Label" type="Label" parent="HBoxContainer"]
+visible = false
 layout_mode = 2
+size_flags_horizontal = 3
 label_settings = SubResource("LabelSettings_7th3v")

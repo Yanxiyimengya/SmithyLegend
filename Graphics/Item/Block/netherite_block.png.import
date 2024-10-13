@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b1oytv4glbt28"
-path="res://.godot/imported/button_highlighted.png-ffa9081190c043e2d953f437d4399fa4.ctex"
+uid="uid://dg0saaqy1i141"
+path="res://.godot/imported/netherite_block.png-fa8680495784f6d2b515653b8ff43bca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Graphics/UI/button_highlighted.png"
-dest_files=["res://.godot/imported/button_highlighted.png-ffa9081190c043e2d953f437d4399fa4.ctex"]
+source_file="res://Graphics/Item/Block/netherite_block.png"
+dest_files=["res://.godot/imported/netherite_block.png-fa8680495784f6d2b515653b8ff43bca.ctex"]
 
 [params]
 

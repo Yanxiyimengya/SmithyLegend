@@ -18,8 +18,8 @@ func add_item_bar(item_id : Variant, item_display_name : String) :
 	item_dict[item_id] = bar;
 	$Panel/VBoxContainer.add_child(bar);
 	bar.gui_input.connect(func(event: InputEvent) :
-		if (event is InputEventMouseButton) : 
-			if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
+		if (event is InputEventScreenTouch) : 
+			if (event.is_pressed()) : 
 				select_item.emit(item_id);
 		);
 "

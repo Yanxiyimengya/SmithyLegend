@@ -1,12 +1,18 @@
 extends Node;
+@onready var resource_preloader: ResourcePreloader = $ResourcePreloader;
 
 var item_dict : Dictionary = {};
 var recipe_dict : Dictionary = {};
 
 var emerald_count : int = 0;
 var day : int = 0;
+var game_time : int = 0;
+var bgm_volume : int = 0;
+var sound_volume : int = 0;
 var log_filling_time : float = 1.0;
 var upgrade_list : Dictionary = {};
+var value_multiplier : float = 1.0;
+var game_progress : float = 0.0;
 
 func _exit_tree() -> void:
 	save_game();
@@ -20,9 +26,8 @@ func _ready() -> void:
 	## 基础配方
 	register_recipe("plank", ["log"], 4, false);
 	# 原木 -> 木板
-	register_recipe("stick", ["plank", "", "", "plank", "", ""], 2, true);
+	register_recipe("stick", ["plank", "", "", "plank", "", ""], 4, true);
 	# 木板 -> 木棍
-	
 
 
 #region 工具装备合成配方
@@ -35,6 +40,7 @@ func set_upgrade(item:  String, level : int = 0) :
 	set_update_effect(item, level);
 
 func set_update_effect(item:  String, level : int) : 
+	game_progress += 4 * level;
 	match (item) : 
 		"iron_upgrade" : 
 			if (level > 0) : GameInitializer.append_iron_props_recipes();
@@ -47,10 +53,19 @@ func set_update_effect(item:  String, level : int) :
 			if (level > 1) : GameInitializer.append_diamond_recipes();
 		"log_quick_filling" : 
 			log_filling_time *= 0.5;
+		"value_upgrade" : 
+			if (level == 0) :
+				value_multiplier = 1.25;
+			if (level == 1) :
+				value_multiplier = 1.5;
+			if (level == 2) :
+				value_multiplier = 2.0;
+			if (level == 3) :
+				value_multiplier = 3.0;
+			
 
 #endregion
 const save_path : String = "user://save.json";
-
 func load_game() : 
 	if (!FileAccess.file_exists(save_path)) : 
 		return;
@@ -64,6 +79,14 @@ func load_game() :
 		self.upgrade_list = json["upgrade_list"];
 		self.day = json["day"];
 		self.emerald_count = json["emerald_count"];
+		if (json.has("game_time")) : 
+			Global.game_time = json["game_time"];
+		if (json.has("bgm_volume")) : 
+			Global.bgm_volume = json["bgm_volume"];
+			AudioServer.set_bus_volume_db(AudioServer.get_bus_index("BGM"),bgm_volume);
+		if (json.has("sound_volume")) : 
+			Global.sound_volume = json["sound_volume"];
+			AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Sound"),sound_volume);
 
 func save_game() : 
 	var file : FileAccess = FileAccess.open(save_path, FileAccess.WRITE);
@@ -71,6 +94,9 @@ func save_game() :
 		var dict : Dictionary = {};
 		dict["upgrade_list"] = upgrade_list;
 		dict["emerald_count"] = emerald_count;
+		dict["game_time"] = game_time;
+		dict["bgm_volume"] = bgm_volume;
+		dict["sound_volume"] = sound_volume;
 		dict["day"] = day;
 		file.store_string(JSON.stringify(dict));
 		file.close();

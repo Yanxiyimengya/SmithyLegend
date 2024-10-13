@@ -1,4 +1,4 @@
-[gd_scene load_steps=139 format=3 uid="uid://3cfrpxyldmeo"]
+[gd_scene load_steps=145 format=3 uid="uid://3cfrpxyldmeo"]
 
 [ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/StartMenu/background_ow.png" id="1_023tj"]
 [ext_resource type="Texture2D" uid="uid://djccodq7284xy" path="res://Graphics/UI/crafetting_table.png" id="1_d0ag6"]
@@ -23,9 +23,9 @@
 [ext_resource type="Texture2D" uid="uid://cuua2ucpox8t4" path="res://Graphics/UI/return.png" id="18_dfxmm"]
 [ext_resource type="Texture2D" uid="uid://bkmfxli3a0yc6" path="res://Graphics/Item/clock.png" id="18_k4ywe"]
 [ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="20_8wvku"]
-[ext_resource type="Texture2D" uid="uid://b1oytv4glbt28" path="res://Graphics/UI/button_highlighted.png" id="21_vedkp"]
-[ext_resource type="Texture2D" uid="uid://pwhnh7r5omus" path="res://Graphics/UI/button.png" id="22_5e8ul"]
-[ext_resource type="Texture2D" uid="uid://txws112ua5sq" path="res://Graphics/Item/knowledge_book.png" id="23_p3q2h"]
+[ext_resource type="Texture2D" uid="uid://b1oytv4glbt28" path="res://Graphics/UI/knowlage_book_button_highlighted.png" id="21_vedkp"]
+[ext_resource type="Texture2D" uid="uid://pwhnh7r5omus" path="res://Graphics/UI/knowlage_book_button.png" id="22_5e8ul"]
+[ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="26_ejfb6"]
 
 [sub_resource type="GDScript" id="GDScript_4do7n"]
 script/source = "extends Node2D;
@@ -40,14 +40,52 @@ script/source = "extends Node2D;
 @onready var timeout_ui: CanvasLayer = $TimeoutUI;
 @onready var gui_layer: CanvasLayer = $GUILayer;
 
-var ingredient_list : Array[String] = [\"raw_copper\", \"raw_iron\"];
 const START_MENU_BGM = preload(\"res://Audio/MenuBGM.MP3\");
 
+var ingredient_list : Array[String] = [\"raw_copper\", \"raw_iron\"];
 var bgm_audio_task : AudioTask = null;
 var make_emerald_count : int = 0;
 
-func _init() -> void:
-	pass;
+var auto_smelt : bool = true;
+
+
+var global_list : Array[String] = [\"copper_ingot\", \"iron_ingot\"];
+func _init() -> void : 
+	if (\"iron_upgrade\" in Global.upgrade_list) : 
+		global_list.append(\"iron_sword\"); 
+		global_list.append(\"iron_shovel\"); 
+		global_list.append(\"iron_pickaxe\"); 
+		global_list.append(\"iron_hoe\");
+		global_list.append(\"iron_axe\");
+		if (Global.upgrade_list[\"iron_upgrade\"] > 1) : 
+			global_list.append(\"iron_boots\");
+			global_list.append(\"iron_leggings\");
+			global_list.append(\"iron_chestplate\");
+			global_list.append(\"iron_helmet\");
+	if (\"gold_upgrade\" in Global.upgrade_list) : 
+		global_list.append(\"gold_ingot\"); 
+		global_list.append(\"golden_sword\"); 
+		global_list.append(\"golden_shovel\"); 
+		global_list.append(\"golden_pickaxe\"); 
+		global_list.append(\"golden_hoe\");
+		global_list.append(\"golden_axe\");
+		if (Global.upgrade_list[\"gold_upgrade\"] > 1) : 
+			global_list.append(\"golden_boots\");
+			global_list.append(\"golden_leggings\");
+			global_list.append(\"golden_chestplate\");
+			global_list.append(\"golden_helmet\");
+	if (\"diamond_upgrade\" in Global.upgrade_list) : 
+		global_list.append(\"diamond_sword\"); 
+		global_list.append(\"diamond_shovel\"); 
+		global_list.append(\"diamond_pickaxe\"); 
+		global_list.append(\"diamond_hoe\");
+		global_list.append(\"diamond_axe\");
+		if (Global.upgrade_list[\"diamond_upgrade\"] > 1) : 
+			global_list.append(\"diamond_boots\");
+			global_list.append(\"diamond_leggings\");
+			global_list.append(\"diamond_chestplate\");
+			global_list.append(\"diamond_helmet\");
+	# 全局物品配方列表
 
 func _ready() -> void : 
 	item_bar.add_item_bar(\"raw_copper\", \"粗铜\");
@@ -59,6 +97,7 @@ func _ready() -> void :
 		ingredient_list.append(\"diamond\");
 		item_bar.add_item_bar(\"diamond\", \"钻石\");
 	mine_list.create_mine();
+	auto_smelt = (\"auto_smelt\" in Global.upgrade_list);
 	
 	bgm_audio_task = AudioManager.play_suond(START_MENU_BGM);
 	bgm_audio_task.volume = -5;
@@ -68,6 +107,8 @@ func _ready() -> void :
 		game_timer.wait_time = 210;
 		if (Global.day >= 20) : 
 			game_timer.wait_time = 240;
+			if (Global.day >= 30) : 
+				game_timer.wait_time = 270;
 	
 	if (Global.day == 0) : 
 		game_scene.process_mode = Node.PROCESS_MODE_DISABLED;
@@ -121,6 +162,7 @@ func _on_game_timer_timeout() -> void:
 	timeout_ui.open();
 	Global.day += 1;
 	Global.emerald_count += make_emerald_count;
+	Global.game_time += game_timer.wait_time;
 "
 
 [sub_resource type="GDScript" id="GDScript_mlhnp"]
@@ -132,12 +174,19 @@ func _on_creafetting_table_button_pressed() -> void:
 		crafting_table_canvas_layer.open();
 	else : 
 		crafting_table_canvas_layer.close();
+
+func _input(event: InputEvent) -> void:
+	if (event is InputEventKey && event.keycode == KEY_E && event.is_pressed()) : 
+		if (!crafting_table_canvas_layer.visible) : 
+			crafting_table_canvas_layer.open();
+		else : 
+			crafting_table_canvas_layer.close();
 "
 
 [sub_resource type="GDScript" id="GDScript_eu4ge"]
 script/source = "extends Node2D;
- 
-var global_list : Array[String] = [\"copper_ingot\", \"iron_ingot\"];
+@onready var game: Node2D = $\"../..\";
+
 var max_value : int = 10;
 
 @onready var slot_marker : Array[Node] = [$Slot1, $Slot2, $Slot3];
@@ -150,13 +199,6 @@ const CHARACTER_LIST : Array[PackedScene] = [
 
 ];
 
-func _ready() -> void:
-	global_list.append_array(Global.recipe_dict.keys());
-	if (\"iron_upgrade\" in Global.upgrade_list) : 
-		global_list.append(\"iron_ingot\");
-	if (\"gold_upgrade\" in Global.upgrade_list) : 
-		global_list.append(\"gold_ingot\");
-
 func summon_diff_character(count : int) : 
 	var result_list : Array[String] = [];
 	var slot : int = 0;
@@ -166,9 +208,9 @@ func summon_diff_character(count : int) :
 			var value : int = 0;
 			var i : int = 0;
 			while (i < count && value < max_value) : 
-				item_id = global_list[randi() % global_list.size()];
+				item_id = game.global_list[randi() % game.global_list.size()];
 				value += Global.item_dict[item_id][\"value\"];
-				result_list.append(global_list[randi() % global_list.size()]);
+				result_list.append(item_id);
 				i+=1;
 			
 			if(randi()%12==0 && Global.day > 10):
@@ -191,7 +233,7 @@ func summon_character(type : int, result : Array[String], slot : int) :
 	await character_node.walk_to(slot_marker[slot].global_position);
 	character_node.can_be_provided = true;
 	character_node.payed.connect(func() : 
-		gui_layer.create_emerald_effect(character_node.global_position-Vector2(0, 200), Vector2(38, 39), character_node.carry_emeralds_count);
+		gui_layer.create_emerald_effect(character_node.global_position-Vector2(0, 200), Vector2(38, 39), character_node.carry_emeralds_count * Global.value_multiplier);
 	);
 	character_node.exited.connect(func() : 
 		character_node.can_be_provided = false;
@@ -459,12 +501,14 @@ _data = {
 
 [sub_resource type="GDScript" id="GDScript_tf0w6"]
 script/source = "extends Node2D
-@onready var furnace_scene: Node3D = $\"../../SubViewportContainer/SubViewport/FurnaceScene\";
+@onready var furnace_scene_viewport: SubViewportContainer = $\"../../FurnaceSceneViewport\";
+@onready var furnace_scene: Node3D = $\"../../FurnaceSceneViewport/SubViewport/FurnaceScene\";
 const MINE = preload(\"res://Scenes/Game/mine.tscn\");
 @onready var game: Node2D = $\"../../../..\";
 
 var mine_list : Array[Node] = [];
 
+const ITEM_ADD_EFFECT = preload(\"res://Scenes/Game/Effect/item_add_effect.tscn\");
 func create_mine() -> void:
 	var item_info : Dictionary;
 	var pos : Vector2 = Vector2.ZERO;
@@ -478,15 +522,42 @@ func create_mine() -> void:
 		mine_slot.position = pos;
 		add_child(mine_slot);
 		pos.x += 300;
+		
+		mine_slot.pressed.connect(func() : 
+			if (game.auto_smelt && Global.item_dict[key][\"can_smelt\"] && mine_slot.item_count > 0) : 
+				var idle_frunace : Node3D = furnace_scene.get_idle_furnace(key);
+				if (idle_frunace != null) : 
+					mine_slot.remove_item();
+					
+					var item : Node = ITEM_ADD_EFFECT.instantiate();
+					item.start_position = mine_slot.global_position;
+					var camera : Camera3D = furnace_scene.get_viewport().get_camera_3d();
+					item.target_position =  furnace_scene_viewport.global_position + camera.unproject_position(idle_frunace.export_marked.global_position) * 2;
+					item.control_point = Vector2(item.target_position.x, -10) + Vector2(randi_range(-50, 50), randi_range(-40, 120));
+					item.texture = Global.item_dict[key][\"texture\"];
+					item.rotation_degrees = randf_range(0, PI*2);
+					item.rotation_speed = randf_range(-5, 5);
+					item.speed = 1.3;
+					get_tree().current_scene.add_child(item);
+					
+					item.finshed.connect(func() : 
+						idle_frunace.set_on(true, key);
+						if (idle_frunace.item_count < furnace_scene.furnace_capacity) : 
+							idle_frunace.item_count += 1;
+					);
+		); # 实现自动装填功能
 "
 
 [sub_resource type="GDScript" id="GDScript_tlro2"]
 script/source = "extends SubViewportContainer;
 @onready var furnace_scene: Node3D = $SubViewport/FurnaceScene;
+@onready var game: Node2D = $\"../../..\";
 
 var collision_node : Node = null;
 var collision_area : Area3D = null;
 var furnace_count : int = 1;
+
+const ITEM_ADD_EFFECT = preload(\"res://Scenes/Game/Effect/item_add_effect.tscn\");
 
 func _ready() -> void : 
 	if (\"furnace_append\" in Global.upgrade_list) : 
@@ -495,14 +566,17 @@ func _ready() -> void :
 	for i : int in round(furnace_count) : 
 		furnace_scene.add_furnace(furnace_upgrade);
 	
-	for furn : Node3D in furnace_scene.furnace_list : 
-		furn.timeout.connect(func() : 
-			var pos : Vector2 = furn.get_viewport().get_camera_3d().unproject_position(furn.global_position);
-			pos += self.global_position;
-		);
+	if (\"furnace_capacity\" in Global.upgrade_list) : 
+		match (Global.upgrade_list[\"furnace_capacity\"]) : 
+			1 : 
+				furnace_scene.furnace_capacity = 4;
+			2 : 
+				furnace_scene.furnace_capacity = 8;
 	DragManager.register_object(self);
+	
+	
 
-func _process(delta: float) -> void : 
+func _process(_delta: float) -> void : 
 	collision_area = get_area();
 	if (collision_area) : 
 		collision_node = collision_area.get_parent();
@@ -513,7 +587,7 @@ func _dm_can_drag(as_position : Vector2, data : Variant) :
 	if (data && data is Array && data.size() > 0) : 
 		if (data[0] == \"IngredientsDrag\") : 
 			if (collision_node && Global.item_dict[data[1]][\"can_smelt\"]) : 
-				if ( (collision_node.item_type == data[1] || !collision_node.on) && collision_node.item_count < 2) :
+				if ( (collision_node.item_type == data[1] || !collision_node.on) && collision_node.item_count < furnace_scene.furnace_capacity) :
 					return true;
 	return false;
 
@@ -556,7 +630,19 @@ func get_area() -> Area3D :
 	return result;
 "
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ik3wn"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_qf1l2"]
+sky_material = SubResource("ProceduralSkyMaterial_ik3wn")
+
+[sub_resource type="Environment" id="Environment_ma1js"]
+background_mode = 2
+sky = SubResource("Sky_qf1l2")
+
 [sub_resource type="World3D" id="World3D_rq8vb"]
+environment = SubResource("Environment_ma1js")
 
 [sub_resource type="GDScript" id="GDScript_h01k2"]
 script/source = "extends Node;
@@ -667,7 +753,21 @@ func _on_chopping_block_destoried() -> void:
 		particle_sprite.visible = false;
 "
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_askkj"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_jo5bs"]
+sky_material = SubResource("ProceduralSkyMaterial_askkj")
+
+[sub_resource type="Environment" id="Environment_81h6v"]
+background_mode = 2
+sky = SubResource("Sky_jo5bs")
+tonemap_mode = 2
+glow_enabled = true
+
 [sub_resource type="World3D" id="World3D_pr1ub"]
+environment = SubResource("Environment_81h6v")
 
 [sub_resource type="Curve" id="Curve_afwo6"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.366397, 0), 0.0, 0.0, 0, 0]
@@ -1256,7 +1356,7 @@ func _on_crafetting_table_crafted_item(item_id: Variant) -> void:
 	recipe_menu.append_recipe(item_id);
 
 func _on_recipe_menu_select_item(item_id: Variant) -> void:
-	crafetting_table_ui.atuo_craft(item_id);
+	crafetting_table_ui.auto_craft(item_id);
 "
 
 [sub_resource type="GDScript" id="GDScript_7coe7"]
@@ -1274,7 +1374,7 @@ func _unhandled_input(event: InputEvent) -> void:
 script/source = "extends Control;
 signal select_item(item_id : Variant);
 
-@onready var racipe_list_container: VBoxContainer = $Panel/ScrollContainer/RacipeListContainer;
+@onready var racipe_list_container: GridContainer = $Panel/ScrollContainer/GridContainer;
 
 var recipe_list : Dictionary = {};
 
@@ -1290,9 +1390,8 @@ func add_item_bar(item_id : Variant, item_display_name : String) :
 	bar.text = item_display_name;
 	racipe_list_container.add_child(bar); 
 	bar.gui_input.connect(func(event: InputEvent) :
-		if (event is InputEventMouseButton) : 
-			if (event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
-				select_item.emit(item_id);
+		if (event is InputEventScreenTouch && event.is_pressed()) : 
+			select_item.emit(item_id);
 		);
 "
 
@@ -1392,7 +1491,6 @@ func _dm_can_drag(as_position : Vector2, data : Variant) :
 					if (slot.get_global_rect().has_point(get_global_mouse_position())) : 
 						slot_target = slot;
 						return true;
-						break;
 	return false;
 
 func _dm_drop_data(data : Variant) : 
@@ -1447,45 +1545,54 @@ func cut_recipe_array(recipe: Array[String]) -> Array[String]:
 		for _i in range(width, 3):
 			cropped_recipe.append(\"\")
 			index += 1
-	return cropped_recipe
+	return cropped_recipe;
 
-func atuo_craft(item_id : String) : 
+func auto_craft(item_id: String):
 	pop_all_item();
 	example = false;
-	var recipe : Array = [];
-	var item_slot_number : int = 0;
-	if (Global.recipe_dict.has(item_id) && Global.recipe_dict[item_id].size() > 0) : 
-			recipe = Global.recipe_dict[item_id][0][\"recipe\"];
-			item_slot_number = Global.recipe_dict[item_id][0][\"item_number\"];
-	else : 
-		return;
-	var index : int = 0;
-	var pos : int = 0;
-	var drag_item_queue : Array[Node] = [];
-	var drag_itemkey_queue : Array[String] = [];
+	var recipe: Array = [];
+	var item_slot_number: int = 0;
+	if Global.recipe_dict.has(item_id) && Global.recipe_dict[item_id].size() > 0: 
+		# 获取制作配方和需要的物品数量
+		recipe = Global.recipe_dict[item_id][0][\"recipe\"];
+		item_slot_number = Global.recipe_dict[item_id][0][\"item_number\"];
+	else: 
+		return
+	var index: int = 0;
+	var pos: int = 0;
+	var drag_item_queue: Array[Node] = [];
+	var drag_itemkey_queue: Array[String] = [];
 	
-	for drop_obj : Node in DragManager.drag_items.get_children() : 
-		if (drag_item_queue.size() >= item_slot_number) : 
+	for i_key : String in recipe : 
+		if (i_key.is_empty()) : continue;
+		drag_itemkey_queue.append(i_key);
+	
+	# 查找拖拽物品是否符合配方要求
+	for drop_obj in DragManager.drag_items.get_children(): 
+		if drag_item_queue.size() >= item_slot_number: 
 			break;
-		index = recipe.find(drop_obj.item_type, pos);
-		if (index > -1) : 
-			if (drop_obj.item_type != \"\") :
+		index = drag_itemkey_queue.find(drop_obj.item_type);
+		if index > -1: 
+			if drop_obj.item_type != \"\":
 				drag_item_queue.append(drop_obj);
-				pos = index;
-	if (drag_item_queue.size() < item_slot_number) : 
-		var item : String = \"\";
-		for i : int in round(recipe.size()) : 
+	
+	if drag_item_queue.size() < item_slot_number: 
+		var item: String = \"\"
+		# 将配方中的物品显示在槽位上
+		for i in round(recipe.size()): 
 			item = recipe[i];
-			if (item != \"\") : 
+			if item != \"\": 
 				item_slots[i].set_example(true, item);
-		example = true;
-	else : 
-		for i in round(recipe.size()) : 
+		example = true
+	else: 
+		# 将物品放入槽位并更新配方
+		for i in round(recipe.size()): 
 			item_slots[i].item_type = recipe[i];
-			if (item_slots[i].item_type != \"\") : 
+			if item_slots[i].item_type != \"\": 
 				item_slots[i].item_count += 1;
 		update_recipe();
-		for drop_obj : Node in drag_item_queue : 
+		# 释放已使用的拖拽物品节点
+		for drop_obj in drag_item_queue: 
 			drop_obj.queue_free();
 
 func update_recipe() : 
@@ -1612,7 +1719,7 @@ axis_stretch_horizontal = 1
 axis_stretch_vertical = 2
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ebiqk"]
-texture = ExtResource("21_vedkp")
+texture = ExtResource("26_ejfb6")
 texture_margin_left = 5.0
 texture_margin_top = 5.0
 texture_margin_right = 5.0
@@ -1621,7 +1728,7 @@ axis_stretch_horizontal = 1
 axis_stretch_vertical = 2
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bxdfi"]
-texture = ExtResource("22_5e8ul")
+texture = ExtResource("26_ejfb6")
 texture_margin_left = 5.0
 texture_margin_top = 5.0
 texture_margin_right = 5.0
@@ -1786,7 +1893,7 @@ texture = ExtResource("9_5vbty")
 position = Vector2(-308, 252)
 script = SubResource("GDScript_tf0w6")
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="GameScene/WorkSpace"]
+[node name="FurnaceSceneViewport" type="SubViewportContainer" parent="GameScene/WorkSpace"]
 offset_left = 1982.0
 offset_top = -330.0
 offset_right = 2185.0
@@ -1795,19 +1902,19 @@ scale = Vector2(4, 4)
 stretch = true
 script = SubResource("GDScript_tlro2")
 
-[node name="SubViewport" type="SubViewport" parent="GameScene/WorkSpace/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="GameScene/WorkSpace/FurnaceSceneViewport"]
 world_3d = SubResource("World3D_rq8vb")
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(203, 400)
 render_target_update_mode = 4
 
-[node name="FurnaceScene" parent="GameScene/WorkSpace/SubViewportContainer/SubViewport" instance=ExtResource("6_el30o")]
+[node name="FurnaceScene" parent="GameScene/WorkSpace/FurnaceSceneViewport/SubViewport" instance=ExtResource("6_el30o")]
 
-[node name="CountShower" type="Node" parent="GameScene/WorkSpace/SubViewportContainer"]
+[node name="CountShower" type="Node" parent="GameScene/WorkSpace/FurnaceSceneViewport"]
 script = SubResource("GDScript_h01k2")
 
-[node name="CountShower" type="PanelContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower"]
+[node name="CountShower" type="PanelContainer" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower"]
 visible = false
 offset_left = 23.0
 offset_top = -76.0
@@ -1816,24 +1923,24 @@ offset_bottom = -8.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_g6oan")
 
-[node name="MarginContainer" type="MarginContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower"]
+[node name="MarginContainer" type="MarginContainer" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower/CountShower"]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 3
 theme_override_constants/margin_right = 3
 theme_override_constants/margin_bottom = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower/CountShower/MarginContainer"]
 layout_mode = 2
 
-[node name="TextureRect" type="TextureRect" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer/VBoxContainer"]
+[node name="TextureRect" type="TextureRect" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower/CountShower/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
 texture = ExtResource("14_6p38k")
 expand_mode = 3
 
-[node name="Label" type="Label" parent="GameScene/WorkSpace/SubViewportContainer/CountShower/CountShower/MarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower/CountShower/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "数量:0"
@@ -1841,7 +1948,7 @@ label_settings = SubResource("LabelSettings_wv8i5")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ShowTimer" type="Timer" parent="GameScene/WorkSpace/SubViewportContainer/CountShower"]
+[node name="ShowTimer" type="Timer" parent="GameScene/WorkSpace/FurnaceSceneViewport/CountShower"]
 wait_time = 0.5
 one_shot = true
 
@@ -1969,8 +2076,8 @@ script = SubResource("GDScript_48c35")
 [node name="Panel" type="Panel" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu"]
 texture_filter = 1
 layout_mode = 2
-offset_left = 109.0
-offset_right = 145.0
+offset_left = 54.0
+offset_right = 107.0
 offset_bottom = 79.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -1982,16 +2089,19 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 18.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 3
 
-[node name="RacipeListContainer" type="VBoxContainer" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu/Panel/ScrollContainer"]
+[node name="GridContainer" type="GridContainer" parent="CraftingTableCanvasLayer/HBoxContainer/RecipeMenu/Panel/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 1
+theme_override_constants/h_separation = 1
+theme_override_constants/v_separation = 1
+columns = 2
 
 [node name="CrafettingTable" type="TextureRect" parent="CraftingTableCanvasLayer/HBoxContainer"]
 layout_mode = 2
@@ -2079,7 +2189,8 @@ offset_left = 21.0
 offset_top = 203.5
 offset_right = 60.0
 offset_bottom = 240.5
-texture_normal = ExtResource("23_p3q2h")
+texture_normal = ExtResource("22_5e8ul")
+texture_pressed = ExtResource("21_vedkp")
 stretch_mode = 0
 
 [node name="TimeoutUI" type="CanvasLayer" parent="."]
@@ -2284,7 +2395,7 @@ label_settings = SubResource("LabelSettings_ujvca")
 [connection signal="timeout" from="GameScene/GameTimer" to="." method="_on_game_timer_timeout"]
 [connection signal="timeout" from="GameScene/Characters/Timer" to="GameScene/Characters" method="_on_timer_timeout"]
 [connection signal="gui_input" from="GameScene/SmithyHouse/Marker2D/IronWorkerVillager/CheckBox" to="GameScene/SmithyHouse/Marker2D/IronWorkerVillager" method="_on_check_box_gui_input"]
-[connection signal="finished" from="GameScene/WorkSpace/SubViewportContainer/SubViewport/FurnaceScene" to="GameScene/WorkSpace/SubViewportContainer" method="_on_furnace_scene_finished"]
+[connection signal="finished" from="GameScene/WorkSpace/FurnaceSceneViewport/SubViewport/FurnaceScene" to="GameScene/WorkSpace/FurnaceSceneViewport" method="_on_furnace_scene_finished"]
 [connection signal="destoried" from="GameScene/WorkSpace/SubViewportContainer2/SubViewport/ChoppingBlock" to="GameScene/WorkSpace/SubViewportContainer2" method="_on_chopping_block_destoried"]
 [connection signal="pressed" from="GameScene/CraftingTableButton" to="GameScene" method="_on_creafetting_table_button_pressed"]
 [connection signal="pressed" from="GUILayer/PausedButton" to="GUILayer" method="_on_paused_button_pressed"]
