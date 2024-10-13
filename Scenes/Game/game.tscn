@@ -1,4 +1,4 @@
-[gd_scene load_steps=145 format=3 uid="uid://3cfrpxyldmeo"]
+[gd_scene load_steps=139 format=3 uid="uid://3cfrpxyldmeo"]
 
 [ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/StartMenu/background_ow.png" id="1_023tj"]
 [ext_resource type="Texture2D" uid="uid://djccodq7284xy" path="res://Graphics/UI/crafetting_table.png" id="1_d0ag6"]
@@ -526,7 +526,7 @@ func create_mine() -> void:
 		mine_slot.pressed.connect(func() : 
 			if (game.auto_smelt && Global.item_dict[key][\"can_smelt\"] && mine_slot.item_count > 0) : 
 				var idle_frunace : Node3D = furnace_scene.get_idle_furnace(key);
-				if (idle_frunace != null) : 
+				if (idle_frunace != null && idle_frunace.item_count < furnace_scene.furnace_capacity) : 
 					mine_slot.remove_item();
 					
 					var item : Node = ITEM_ADD_EFFECT.instantiate();
@@ -630,19 +630,7 @@ func get_area() -> Area3D :
 	return result;
 "
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ik3wn"]
-sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-
-[sub_resource type="Sky" id="Sky_qf1l2"]
-sky_material = SubResource("ProceduralSkyMaterial_ik3wn")
-
-[sub_resource type="Environment" id="Environment_ma1js"]
-background_mode = 2
-sky = SubResource("Sky_qf1l2")
-
 [sub_resource type="World3D" id="World3D_rq8vb"]
-environment = SubResource("Environment_ma1js")
 
 [sub_resource type="GDScript" id="GDScript_h01k2"]
 script/source = "extends Node;
@@ -753,21 +741,7 @@ func _on_chopping_block_destoried() -> void:
 		particle_sprite.visible = false;
 "
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_askkj"]
-sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-
-[sub_resource type="Sky" id="Sky_jo5bs"]
-sky_material = SubResource("ProceduralSkyMaterial_askkj")
-
-[sub_resource type="Environment" id="Environment_81h6v"]
-background_mode = 2
-sky = SubResource("Sky_jo5bs")
-tonemap_mode = 2
-glow_enabled = true
-
 [sub_resource type="World3D" id="World3D_pr1ub"]
-environment = SubResource("Environment_81h6v")
 
 [sub_resource type="Curve" id="Curve_afwo6"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.366397, 0), 0.0, 0.0, 0, 0]

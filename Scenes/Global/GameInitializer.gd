@@ -2,6 +2,26 @@ extends RefCounted;
 class_name GameInitializer;
 
 static func init() -> void:
+	
+	## 基础配方
+	Global.register_recipe("plank", ["log"], 4, false);
+	# 原木 -> 木板
+	Global.register_recipe("stick", ["plank", "", "", "plank", "", ""], 4, true);
+	# 木板 -> 木棍
+	Global.register_item("chest", preload("res://Graphics/Item/Block/chest.png"));
+	# 箱子
+	Global.register_item("boat", preload("res://Graphics/Item/oak_boat.png"));
+	# 船
+	Global.register_item("chest_boat", preload("res://Graphics/Item/oak_chest_boat.png"));
+	# 船
+	
+	Global.register_recipe("chest", ["plank", "plank", "plank", "plank", "", "plank","plank", "plank", "plank"], 1, true);
+	# 箱子合成配方
+	Global.register_recipe("boat", ["plank", "", "plank","plank", "plank", "plank"], 1, true);
+	# 箱子合成配方
+	Global.register_recipe("chest_boat", ["boat", "chest"], 1, false);
+	# 箱子合成配方
+	
 	## 原材料
 	Global.register_item("raw_copper", preload("res://Graphics/Item/raw_copper.png"));
 	Global.item_dict["raw_copper"]["can_gifted"] = false;
@@ -44,11 +64,17 @@ static func init() -> void:
 	Global.item_dict["stick"]["value"] = 1;
 	# 木棍	
 	
+	#region 工具装备
+	Global.register_item("iron_block", preload("res://Graphics/Item/Block/iron_block.png"));
+	Global.item_dict["iron_block"]["value"] = 20;
+	# 铁块
 	Global.register_item("bucket", preload("res://Graphics/Item/Iron/bucket.png"));
 	Global.item_dict["bucket"]["value"] = 7;
 	# 铁桶
+	Global.register_item("anvil", preload("res://Graphics/Item/Block/anvil.png"));
+	Global.item_dict["anvil"]["value"] = 68;
+	# 铁砧
 	
-	#region 工具装备
 	Global.register_item("iron_sword", preload("res://Graphics/Item/Iron/iron_sword.png"));
 	Global.item_dict["iron_sword"]["value"] = 8;
 	# 铁剑
@@ -77,6 +103,9 @@ static func init() -> void:
 	Global.item_dict["iron_boots"]["value"] = 9;
 	# 铁靴子
 	
+	Global.register_item("gold_block", preload("res://Graphics/Item/Block/glod_block.png"));
+	Global.item_dict["gold_block"]["value"] = 30;
+	# 金块
 	Global.register_item("golden_sword", preload("res://Graphics/Item/Gold/golden_sword.png"));
 	Global.item_dict["golden_sword"]["value"] = 12;
 	# 金剑
@@ -135,6 +164,13 @@ static func init() -> void:
 	#endregion
 
 static func append_iron_props_recipes() : 
+	Global.register_recipe("iron_block", ["iron_ingot", "iron_ingot", "iron_ingot", "iron_ingot", "iron_ingot", "iron_ingot","iron_ingot", "iron_ingot", "iron_ingot"], 1, true);
+	# 铁块合成配方
+	Global.register_recipe("bucket", ["iron_ingot", "", "iron_ingot","", "iron_ingot", ""], 1, true);
+	# 桶合成配方
+	Global.register_recipe("anvil", ["iron_block", "iron_block", "iron_block","", "iron_ingot", "", "iron_ingot", "iron_ingot", "iron_ingot"], 1, true);
+	# 铁砧合成配方
+	
 	Global.register_recipe("iron_sword", ["iron_ingot", "", "","iron_ingot", "", "","stick", "", ""], 1, true);
 	# 铁剑合成配方
 	Global.register_recipe("iron_pickaxe", ["iron_ingot", "iron_ingot", "iron_ingot","", "stick", "","", "stick", ""], 1, true);
@@ -157,6 +193,8 @@ static func append_iron_recipes() :
 	# 铁靴子合成配方
 
 static func append_gold_props_recipes() : 
+	Global.register_recipe("gold_block", ["gold_ingot", "gold_ingot", "gold_ingot", "gold_ingot", "gold_ingot", "gold_ingot","gold_ingot", "gold_ingot", "gold_ingot"], 1, true);
+	# 铁块合成配方
 	Global.register_recipe("golden_sword", ["gold_ingot", "", "","gold_ingot", "", "","stick", "", ""], 1, true);
 	# 金剑合成配方
 	Global.register_recipe("golden_pickaxe", ["gold_ingot", "gold_ingot", "gold_ingot","", "stick", "","", "stick", ""], 1, true);
@@ -188,10 +226,10 @@ static func append_diamond_props_recipes() :
 	# 钻石斧合成配方
 	Global.register_recipe("diamond_hoe", ["diamond", "diamond", "","", "stick", "","", "stick", ""], 1, true);
 	# 钻石锄合成配方
-
-static func append_diamond_recipes() : 
 	Global.register_recipe("diamond_shovel", ["diamond", "", "","stick", "", "","stick", "", ""], 1, true);
 	# 钻石铲合成配方
+
+static func append_diamond_recipes() : 
 	Global.register_recipe("diamond_helmet", ["diamond", "diamond", "diamond","diamond", "", "diamond"], 1, true);
 	# 钻石头盔合成配方
 	Global.register_recipe("diamond_chestplate", ["diamond", "", "diamond","diamond", "diamond", "diamond","diamond", "diamond", "diamond"], 1, true);

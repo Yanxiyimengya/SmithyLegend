@@ -426,7 +426,7 @@ theme_override_constants/margin_bottom = 5
 [node name="Label" type="Label" parent="CanvasLayer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "版本号:1.0.8[测试]
+text = "版本号:1.0.8
 作者:B站 - 烟汐忆梦_YM
 不得以盈利为目的二次分发,宣传"
 label_settings = SubResource("LabelSettings_lbcpq")

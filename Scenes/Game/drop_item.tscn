@@ -1,24 +1,23 @@
-[gd_scene load_steps=5 format=3 uid="uid://d4ik8y0y2c7ja"]
+[gd_scene load_steps=6 format=3 uid="uid://d4ik8y0y2c7ja"]
 
-[ext_resource type="Texture2D" uid="uid://0arvkau0co5f" path="res://Graphics/Item/Block/log.png" id="2_pawjs"]
+[ext_resource type="Texture2D" uid="uid://d2ltobho6qjl7" path="res://Graphics/Item/Block/glod_block.png" id="2_bgwux"]
 [ext_resource type="Texture2D" uid="uid://c8kt5ml5fo4b0" path="res://Graphics/Item/shadow.png" id="2_tqlns"]
 
 [sub_resource type="GDScript" id="GDScript_kthdy"]
 script/source = "extends Node2D;
 
 @onready var shadow: Sprite2D = $Node/Shadow;
-@onready var texture_rect: TextureRect = $TextureRect;
-@onready var check_box: Control = $CheckBox;
+@onready var texture_button: TextureButton = $TextureButton;
 
 var item_type : String = \"\" : 
 	set(value) : 
 		if (Global.item_dict.has(value)) : 
-			$TextureRect.texture = Global.item_dict[value][\"texture\"];
-		else : $TextureRect.texture = null;
+			$TextureButton.texture_normal = Global.item_dict[value][\"texture\"];
+		else : $TextureButton.texture_normal = null;
 		item_type = value;
 
 var velocity : Vector2 = Vector2.ZERO;
-var shadow_visible : bool = true : 
+var show_visible : bool = true : 
 	set(value) : 
 		self.visible = value;
 		$Node/Shadow.visible = value;
@@ -38,13 +37,13 @@ func _ready() -> void:
 		if (success && dragging) : 
 			self.queue_free();
 		dragging = false;
-		shadow_visible = true;
+		show_visible = true;
 	);
 
 func _process(delta: float) -> void:
 	shadow.global_position = Vector2(self.global_position.x, z_pos + 20);
 	var distance = abs(z_pos - global_position.y)
-	shadow.scale = texture_rect.scale * max(1.0 - distance / z_pos, 0.0) * 3.2; 
+	shadow.scale = scale * max(1.0 - distance / z_pos, 0.0) * 3.2; 
 	shadow.modulate.a = min(max(1.0 - distance / z_pos, 0.0) * 0.5, 1.0);
 	
 	if (!dragging) : 
@@ -59,51 +58,38 @@ func _process(delta: float) -> void:
 	else : 
 		z_pos = (global_position.y);
 		z_pos = clamp(z_pos, 610, 720);
-
-var drag_index : int = -1;
-func _input(event: InputEvent) -> void:
-	if (!drag_protected) : 
-		if (event is InputEventScreenTouch && check_box.get_global_rect().has_point(event.position)) : 
-			if (event.is_pressed()) : 
-				if (!DragManager.dragging) : 
-					DragManager.drag_start([\"IngredientsDrag\", item_type]);
-					var spr : Node = Sprite2D.new();
-					spr.texture = Global.item_dict[item_type][\"texture\"];
-					DragManager.set_drag_preview(spr);
-					dragging = true;
-					velocity = Vector2.ZERO;
-					shadow_visible = false;
-					global_position = event.position;
-					drag_index = event.index;
-		
-		if (event is InputEventScreenDrag && drag_index == event.index && dragging) : 
-			global_position = event.position;
 "
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_mhvn4"]
 blend_mode = 4
 
+[sub_resource type="GDScript" id="GDScript_5e7cl"]
+script/source = "extends TextureButton;
+@onready var drop_item: Node2D = $\"..\";
+
+var drag_index : int = -1;
+func _gui_input(event: InputEvent) -> void:
+	if (!drop_item.drag_protected) : 
+		if (event is InputEventScreenTouch) : 
+			if (event.is_pressed()) : 
+				if (!DragManager.dragging) : 
+					DragManager.drag_start([\"IngredientsDrag\", drop_item.item_type]);
+					var spr : Node = Sprite2D.new();
+					spr.texture = Global.item_dict[drop_item.item_type][\"texture\"];
+					DragManager.set_drag_preview(spr);
+					drop_item.dragging = true;
+					drop_item.velocity = Vector2.ZERO;
+					drop_item.global_position = get_global_mouse_position();
+					drag_index = event.index;
+			
+		if (event is InputEventScreenDrag && drag_index == event.index && drop_item.dragging) : 
+			drop_item.global_position = get_global_mouse_position();
+			drop_item.show_visible = false;
+"
+
 [node name="DropItem" type="Node2D" groups=["DropItem"]]
 y_sort_enabled = true
 script = SubResource("GDScript_kthdy")
-
-[node name="TextureRect" type="TextureRect" parent="."]
-y_sort_enabled = true
-custom_minimum_size = Vector2(16, 16)
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -32.0
-offset_top = -32.0
-offset_right = 32.0
-offset_bottom = 32.0
-grow_horizontal = 2
-grow_vertical = 2
-pivot_offset = Vector2(32, 32)
-texture = ExtResource("2_pawjs")
-expand_mode = 1
 
 [node name="Node" type="Node" parent="."]
 
@@ -115,10 +101,12 @@ scale = Vector2(4, 4)
 texture = ExtResource("2_tqlns")
 offset = Vector2(0, -4.75)
 
-[node name="CheckBox" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-offset_left = -47.0
-offset_top = -49.0
-offset_right = 47.0
-offset_bottom = 49.0
+[node name="TextureButton" type="TextureButton" parent="."]
+offset_left = -32.0
+offset_top = -35.0
+offset_right = 32.0
+offset_bottom = 29.0
+pivot_offset = Vector2(32, 35)
+texture_normal = ExtResource("2_bgwux")
+stretch_mode = 0
+script = SubResource("GDScript_5e7cl")

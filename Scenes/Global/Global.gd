@@ -23,12 +23,6 @@ func _ready() -> void:
 	for item : String in upgrade_list : 
 		set_upgrade(item, upgrade_list[item]);
 	
-	## 基础配方
-	register_recipe("plank", ["log"], 4, false);
-	# 原木 -> 木板
-	register_recipe("stick", ["plank", "", "", "plank", "", ""], 4, true);
-	# 木板 -> 木棍
-
 
 #region 工具装备合成配方
 

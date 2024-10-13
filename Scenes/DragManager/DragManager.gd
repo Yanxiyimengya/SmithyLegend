@@ -23,7 +23,7 @@ func set_drag_preview(preview : CanvasItem) :
 	if (drag_preview != null) : 
 		drag_preview.queue_free();
 	drag_preview = preview;
-	drag_preview.visible = true;
+	drag_preview.visible = false;
 	preview.scale = Vector2(64, 64) / preview.texture.get_size();
 	if (!preview.is_inside_tree()) : 
 		self.add_child(preview);
@@ -72,6 +72,7 @@ func _input(event: InputEvent) -> void:
 		if (dragging) : 
 			if (drag_preview != null && (event is InputEventScreenDrag || event is InputEventScreenTouch)) : 
 				drag_preview.global_position = event.position;
+				drag_preview.visible = true;
 			var is_released : bool = false;
 			if (event is InputEventScreenTouch) : 
 				if (event.is_released()) : 

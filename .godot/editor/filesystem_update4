@@ -1,7 +1,0 @@
-res://Scenes/Game/drop_item.tscn
-res://Shaders/gama.gdshader
-res://Scenes/Game/game.tscn
-res://Scenes/StartMenus/shop_menu.tscn
-res://Scenes/Game/furnace.tscn
-res://Scenes/Game/furnace_single.tscn
-res://Scenes/Global/GameInitializer.gd
