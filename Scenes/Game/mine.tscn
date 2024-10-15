@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://dk02p7itik21n"]
 
 [ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="1_m7cqe"]
-[ext_resource type="Texture2D" uid="uid://bvyoddievw80l" path="res://Graphics/mine.png" id="2_tuut6"]
+[ext_resource type="Texture2D" uid="uid://bvyoddievw80l" path="res://Graphics/UI/mine.png" id="2_tuut6"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_bavou"]
 resource_local_to_scene = true

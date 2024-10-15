@@ -1,0 +1,513 @@
+[gd_scene load_steps=24 format=3 uid="uid://bbyak2wetx75r"]
+
+[ext_resource type="Texture2D" uid="uid://c7wff5vs2b73" path="res://Graphics/MainMenu.png" id="1_livov"]
+[ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="2_ubsdj"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_u6voo"]
+[ext_resource type="Texture2D" uid="uid://cranl7y14bn3d" path="res://Graphics/UI/join.png" id="4_cy1cy"]
+[ext_resource type="Texture2D" uid="uid://ciyarbruv7xfo" path="res://Graphics/UI/join_highlighted.png" id="5_a3tcu"]
+[ext_resource type="Texture2D" uid="uid://dichorub38tc2" path="res://Graphics/Item/gear.png" id="6_g5ikc"]
+[ext_resource type="Texture2D" uid="uid://b1g2vgtt6335o" path="res://Graphics/UI/short_button.png" id="7_gq2cy"]
+[ext_resource type="Texture2D" uid="uid://rjjal6rs815o" path="res://Graphics/UI/short_button_bottom.png" id="8_jutq1"]
+
+[sub_resource type="GDScript" id="GDScript_ku11u"]
+script/source = "extends Control;
+@onready var update_animation_player: AnimationPlayer = $UpdateAnimationPlayer;
+@onready var emerald_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer/Count;
+@onready var day_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer2/Count
+@onready var game_process_label: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer3/Count;
+@onready var play_time_count: Label = $TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer4/Count;
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+
+func _ready() -> void:
+	update_animation_player.play(&\"UpdateAnim\");
+	emerald_count.text = str(Global.emerald_count);
+	day_count.text = str(Global.day);
+	
+	game_process_label.text = str(floor(Global.game_progress)) + \"%\";
+	
+	var second_str : String = str(Global.game_time%60);
+	if (second_str.length() < 2) : 
+		second_str = \"0\" + second_str;
+	play_time_count.text = str(Global.game_time/60) + \":\" + second_str;
+
+func _on_furnace_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"game\"));
+func _on_furnace_button_mouse_entered() -> void:
+	get_tree().create_tween().tween_property($FurnaceEffectHightLightPolygon, \"color:a\", 0.2, 0.05);
+func _on_furnace_button_mouse_exited() -> void:
+	get_tree().create_tween().tween_property($FurnaceEffectHightLightPolygon, \"color:a\", 0.0, 0.05);
+
+
+func _on_girnd_button_pressed() -> void:
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"shop_menu\"));
+	AudioManager.play_global_audio(CLICK_SOUND);
+func _on_girnd_button_mouse_entered() -> void:
+	get_tree().create_tween().tween_property($GirndStoneHightLightPolygon, \"color:a\", 0.2, 0.05);
+func _on_girnd_button_mouse_exited() -> void:
+	get_tree().create_tween().tween_property($GirndStoneHightLightPolygon, \"color:a\", 0.0, 0.05);
+
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"start_menu\"));
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6csjn"]
+shader = ExtResource("2_ubsdj")
+shader_parameter/fov = 1.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = -22.0
+shader_parameter/x_rot = 10.0
+shader_parameter/inset = 1.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_23tg8"]
+font = ExtResource("3_u6voo")
+font_size = 24
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8mvnv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_t2pjr"]
+font = ExtResource("3_u6voo")
+font_size = 33
+shadow_color = Color(0, 0, 0, 0.619608)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_o7o0u"]
+
+[sub_resource type="Animation" id="Animation_lpl3p"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("GirndButton/Label:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1.13535, 1.13535)]
+}
+
+[sub_resource type="Animation" id="Animation_sbsa8"]
+resource_name = "UpdateAnim"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("FurnaceButton/Label:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.0333333, 0.0666667, 0.1, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333, 0.366667, 0.4, 0.433333, 0.466667, 0.5, 0.533333, 0.566667, 0.6, 0.633333, 0.666667, 0.7, 0.733333, 0.766667, 0.8, 0.833333, 0.866667, 0.9, 0.933333, 0.966667, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.00219, 1.00219), Vector2(1.00865, 1.00865), Vector2(1.0191, 1.0191), Vector2(1.03309, 1.03309), Vector2(1.05, 1.05), Vector2(1.0691, 1.0691), Vector2(1.08955, 1.08955), Vector2(1.11045, 1.11045), Vector2(1.1309, 1.1309), Vector2(1.15, 1.15), Vector2(1.16691, 1.16691), Vector2(1.1809, 1.1809), Vector2(1.19135, 1.19135), Vector2(1.19781, 1.19781), Vector2(1.2, 1.2), Vector2(1.19781, 1.19781), Vector2(1.19135, 1.19135), Vector2(1.1809, 1.1809), Vector2(1.16691, 1.16691), Vector2(1.15, 1.15), Vector2(1.1309, 1.1309), Vector2(1.11045, 1.11045), Vector2(1.08955, 1.08955), Vector2(1.0691, 1.0691), Vector2(1.05, 1.05), Vector2(1.03309, 1.03309), Vector2(1.0191, 1.0191), Vector2(1.00865, 1.00865), Vector2(1.00219, 1.00219), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("GirndButton/Label:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.0333333, 0.0666667, 0.1, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333, 0.366667, 0.4, 0.433333, 0.466667, 0.5, 0.533333, 0.566667, 0.6, 0.633333, 0.666667, 0.7, 0.733333, 0.766667, 0.8, 0.833333, 0.866667, 0.9, 0.933333, 0.966667, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(1.5, 1.5), Vector2(1.51333, 1.51333), Vector2(1.52667, 1.52667), Vector2(1.54, 1.54), Vector2(1.55333, 1.55333), Vector2(1.56667, 1.56667), Vector2(1.58, 1.58), Vector2(1.59333, 1.59333), Vector2(1.60667, 1.60667), Vector2(1.62, 1.62), Vector2(1.63333, 1.63333), Vector2(1.64667, 1.64667), Vector2(1.66, 1.66), Vector2(1.67333, 1.67333), Vector2(1.68667, 1.68667), Vector2(1.7, 1.7), Vector2(1.68667, 1.68667), Vector2(1.67333, 1.67333), Vector2(1.66, 1.66), Vector2(1.64667, 1.64667), Vector2(1.63333, 1.63333), Vector2(1.62, 1.62), Vector2(1.60667, 1.60667), Vector2(1.59333, 1.59333), Vector2(1.58, 1.58), Vector2(1.56667, 1.56667), Vector2(1.55333, 1.55333), Vector2(1.54, 1.54), Vector2(1.52667, 1.52667), Vector2(1.51333, 1.51333), Vector2(1.5, 1.5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nhjqf"]
+_data = {
+"RESET": SubResource("Animation_lpl3p"),
+"UpdateAnim": SubResource("Animation_sbsa8")
+}
+
+[sub_resource type="GDScript" id="GDScript_4jh5n"]
+script/source = "extends CanvasLayer;
+@onready var setting_button: TextureButton = $MarginContainer2/SettingButton;
+@onready var setting_menu: PanelContainer = $SettingMenu;
+@onready var bgm_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar;
+@onready var sound_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar;
+
+var openned : bool = false;
+var openning : bool = false;
+
+func _ready() -> void:
+	bgm_slider_bar.value = Global.bgm_volume;
+	sound_slider_bar.value = Global.sound_volume;
+	bgm_slider_bar.drag_ended.connect(func(c: bool) : 
+		Global.save_game();
+	);
+	sound_slider_bar.drag_ended.connect(func(c: bool) : 
+		Global.save_game();
+	);
+
+func _on_setting_button_pressed() -> void : 
+	if (!openning) : 
+		openning = true;
+		var tween : Tween = get_tree().create_tween().set_parallel();
+		if (openned) : 
+			tween.tween_property(setting_menu, \"position:x\", 1280.0, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+			tween.tween_property(setting_menu, \"modulate:a\", 0.0, 0.2);
+		else :
+			tween.tween_property(setting_menu, \"position:x\", 940.0, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE);
+			tween.tween_property(setting_menu, \"modulate:a\", 1.0, 0.2);
+		openned = !openned;
+		await tween.finished;
+		openning = false;
+
+func _on_bgm_slider_bar_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"BGM\"),value);
+	Global.bgm_volume = value;
+
+func _on_sound_slider_bar_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"Sound\"),value);
+	Global.sound_volume = value;
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_lbcpq"]
+line_spacing = 4.0
+font = ExtResource("3_u6voo")
+font_size = 24
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3pa43"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_lid56"]
+font = ExtResource("3_u6voo")
+font_size = 24
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qbwaj"]
+texture = ExtResource("8_jutq1")
+texture_margin_left = 1.0
+texture_margin_top = 1.0
+texture_margin_right = 1.0
+texture_margin_bottom = 1.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2cwn8"]
+border_width_left = 1
+border_color = Color(0, 0, 0, 1)
+expand_margin_top = 3.0
+expand_margin_bottom = 3.0
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_ku11u")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -2.0
+offset_right = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_livov")
+expand_mode = 1
+
+[node name="Panel" type="SubViewportContainer" parent="TextureRect"]
+material = SubResource("ShaderMaterial_6csjn")
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.318
+anchor_top = 0.611
+anchor_right = 0.552
+anchor_bottom = 0.774
+offset_left = 1.95996
+offset_top = -5.41699
+offset_right = -8.56006
+offset_bottom = 20.822
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="TextureRect/Panel"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(289, 148)
+render_target_update_mode = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TextureRect/Panel/SubViewport"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TextureRect/Panel/SubViewport/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Money" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "绿宝石:"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="Count" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="TextureRect/Panel/SubViewport/VBoxContainer"]
+layout_mode = 2
+
+[node name="Day" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "天数:"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="Count" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="TextureRect/Panel/SubViewport/VBoxContainer"]
+layout_mode = 2
+
+[node name="GameProcess" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "游戏进度:"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="Count" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0%"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="TextureRect/Panel/SubViewport/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayTime" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "游戏时长:"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="Count" type="Label" parent="TextureRect/Panel/SubViewport/VBoxContainer/HBoxContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "00:00"
+label_settings = SubResource("LabelSettings_23tg8")
+text_overrun_behavior = 1
+
+[node name="FurnaceButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.39
+anchor_top = 0.315
+anchor_right = 0.481
+anchor_bottom = 0.427
+offset_left = -36.2
+offset_top = -83.305
+offset_right = 27.3199
+offset_bottom = 108.031
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_8mvnv")
+flat = true
+
+[node name="Label" type="Label" parent="FurnaceButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -144.0
+offset_top = -137.5
+offset_right = 144.0
+offset_bottom = 137.5
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.0436332
+scale = Vector2(1.1233, 1.1233)
+pivot_offset = Vector2(141.913, 137.693)
+text = "开始新的一天"
+label_settings = SubResource("LabelSettings_t2pjr")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GirndButton" type="Button" parent="."]
+layout_mode = 0
+offset_top = 477.0
+offset_right = 365.0
+offset_bottom = 754.0
+theme_override_styles/focus = SubResource("StyleBoxEmpty_o7o0u")
+flat = true
+
+[node name="Label" type="Label" parent="GirndButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -174.5
+offset_top = -105.5
+offset_right = 113.5
+offset_bottom = 169.5
+grow_horizontal = 2
+grow_vertical = 2
+rotation = -0.0436332
+scale = Vector2(1.13535, 1.13535)
+pivot_offset = Vector2(141.913, 137.693)
+text = "商店"
+label_settings = SubResource("LabelSettings_t2pjr")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FurnaceEffectHightLightPolygon" type="Polygon2D" parent="."]
+color = Color(1, 1, 1, 0)
+polygon = PackedVector2Array(520, 109, 464, 163, 463, 421, 517, 430, 645, 423, 645, 152)
+
+[node name="GirndStoneHightLightPolygon" type="Polygon2D" parent="."]
+color = Color(1, 1, 1, 0)
+polygon = PackedVector2Array(-3, 524, 53, 493, 289, 474, 317, 524, 318, 546, 343, 542, 369, 579, 367, 740, 361, 742, 361, 747, -2, 747)
+
+[node name="UpdateAnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_nhjqf")
+}
+
+[node name="ExitButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 15.0
+offset_right = 75.0
+offset_bottom = 72.0
+texture_normal = ExtResource("4_cy1cy")
+texture_pressed = ExtResource("5_a3tcu")
+texture_hover = ExtResource("5_a3tcu")
+stretch_mode = 6
+flip_h = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+script = SubResource("GDScript_4jh5n")
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -281.0
+offset_top = -57.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "版本号:1.0.8
+作者:B站 - 烟汐忆梦_YM
+不得以盈利为目的二次分发,宣传"
+label_settings = SubResource("LabelSettings_lbcpq")
+
+[node name="MarginContainer2" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -51.0
+offset_bottom = 51.0
+grow_horizontal = 0
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+
+[node name="SettingButton" type="TextureButton" parent="CanvasLayer/MarginContainer2"]
+layout_mode = 2
+texture_normal = ExtResource("6_g5ikc")
+stretch_mode = 0
+
+[node name="SettingMenu" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 1280.0
+offset_top = 62.0
+offset_right = 1605.0
+offset_bottom = 114.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_3pa43")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SettingMenu"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/SettingMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "背景音乐音量"
+label_settings = SubResource("LabelSettings_lid56")
+
+[node name="BGMSliderBar" type="HSlider" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_icons/grabber = ExtResource("7_gq2cy")
+theme_override_icons/grabber_highlight = ExtResource("7_gq2cy")
+theme_override_icons/grabber_disabled = ExtResource("7_gq2cy")
+theme_override_icons/tick = ExtResource("7_gq2cy")
+theme_override_styles/slider = SubResource("StyleBoxTexture_qbwaj")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_2cwn8")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_2cwn8")
+min_value = -60.0
+max_value = 0.0
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer/SettingMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "音效音量"
+label_settings = SubResource("LabelSettings_lid56")
+
+[node name="SoundSliderBar" type="HSlider" parent="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_icons/grabber = ExtResource("7_gq2cy")
+theme_override_icons/grabber_highlight = ExtResource("7_gq2cy")
+theme_override_icons/grabber_disabled = ExtResource("7_gq2cy")
+theme_override_icons/tick = ExtResource("7_gq2cy")
+theme_override_styles/slider = SubResource("StyleBoxTexture_qbwaj")
+theme_override_styles/grabber_area = SubResource("StyleBoxFlat_2cwn8")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_2cwn8")
+min_value = -60.0
+max_value = 0.0
+
+[connection signal="mouse_entered" from="FurnaceButton" to="." method="_on_furnace_button_mouse_entered"]
+[connection signal="mouse_exited" from="FurnaceButton" to="." method="_on_furnace_button_mouse_exited"]
+[connection signal="pressed" from="FurnaceButton" to="." method="_on_furnace_button_pressed"]
+[connection signal="mouse_entered" from="GirndButton" to="." method="_on_girnd_button_mouse_entered"]
+[connection signal="mouse_exited" from="GirndButton" to="." method="_on_girnd_button_mouse_exited"]
+[connection signal="pressed" from="GirndButton" to="." method="_on_girnd_button_pressed"]
+[connection signal="pressed" from="ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/MarginContainer2/SettingButton" to="CanvasLayer" method="_on_setting_button_pressed"]
+[connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar" to="CanvasLayer" method="_on_bgm_slider_bar_value_changed"]
+[connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar" to="CanvasLayer" method="_on_sound_slider_bar_value_changed"]

@@ -47,6 +47,7 @@ script = SubResource("GDScript_3ejjn")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
+size_flags_horizontal = 0
 
 [node name="MarginContainer" type="CenterContainer" parent="HBoxContainer"]
 layout_mode = 2

@@ -1,0 +1,189 @@
+[gd_scene load_steps=14 format=3 uid="uid://d1p2xjjylbg0s"]
+
+[ext_resource type="Shader" path="res://Shaders/texture_mix.gdshader" id="1_1hcxu"]
+[ext_resource type="Texture2D" uid="uid://ba6iygo1wsc6e" path="res://Graphics/Scenes/TheatreRaid1.png" id="2_g5olr"]
+[ext_resource type="Texture2D" uid="uid://c20py6hhsmvit" path="res://Graphics/IronWorker/IronWorkerVillager.png" id="3_ndena"]
+[ext_resource type="PackedScene" uid="uid://bpbc6coptdnqw" path="res://Scenes/TextTyper/TextTyper.tscn" id="3_occn3"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="4_yoc8u"]
+
+[sub_resource type="GDScript" id="GDScript_acdxu"]
+script/source = "extends Control;
+@onready var texture_rect: TextureRect = $TextureRect;
+const THEATRE_RAID_2 = preload(\"res://Graphics/Scenes/TheatreRaid2.png\");
+const MINECRAFT_DOG = preload(\"res://Audio/Minecraft_Dog.ogg\");
+
+@onready var text_typer: TextTyper = $DialogPanel/TextTyper;
+var audio_task : AudioTask;
+
+var change_scene_progress : float = 0.0 : 
+	set(value) : 
+		change_scene_progress = value;
+		texture_rect.material.set_shader_parameter(\"progress\", value);
+
+func _ready() -> void:
+	audio_task = AudioManager.play_suond(MINECRAFT_DOG);
+	text_typer.target_object = self;
+
+
+
+
+
+
+
+
+
+func change_background(texture : Texture, timer : float) : 
+	texture_rect.material.set_shader_parameter(\"mix_texture\", texture);
+	var tween : Tween = create_tween();
+	tween.tween_property(self, \"change_scene_progress\", 1.0, timer);
+	await tween.finished;
+	texture_rect.texture = texture;
+	change_scene_progress = 0.0;
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6mbaq"]
+shader = ExtResource("1_1hcxu")
+shader_parameter/progress = 0.0
+
+[sub_resource type="Shader" id="Shader_jcco4"]
+code = "shader_type canvas_item;
+
+uniform float space; // X轴间距
+
+void fragment() {
+	float a = smoothstep(0, space, UV.x);
+	float b = smoothstep(1, 1.0 - space, UV.x);
+	
+	float c = smoothstep(0, space*0.75, UV.y);
+	float d = smoothstep(1, 1.0 - space*0.75, UV.y);
+	
+	COLOR.a *= a * b *c * d;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_m3ung"]
+shader = SubResource("Shader_jcco4")
+shader_parameter/space = 0.04
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nx61i"]
+bg_color = Color(0, 0, 0, 0.513726)
+
+[sub_resource type="Animation" id="Animation_fdkuw"]
+resource_name = "VillagerSoundAnim"
+length = 0.15
+step = 0.01
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.07, 0.14),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.6, 0.6), Vector2(0.62, 0.62), Vector2(0.6, 0.6)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.07, 0.14),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(151, 570), Vector2(151, 550), Vector2(151, 570)]
+}
+
+[sub_resource type="Animation" id="Animation_86cey"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0.6, 0.6)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(151, 569)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_xif5e"]
+_data = {
+"RESET": SubResource("Animation_86cey"),
+"VillagerSpeakingAnim": SubResource("Animation_fdkuw")
+}
+
+[node name="TheatreRaid" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_acdxu")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_6mbaq")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_g5olr")
+expand_mode = 1
+
+[node name="IronWorkerVillager" type="Sprite2D" parent="."]
+position = Vector2(151, 570)
+scale = Vector2(0.602857, 0.602857)
+texture = ExtResource("3_ndena")
+
+[node name="DialogPanel" type="Panel" parent="."]
+material = SubResource("ShaderMaterial_m3ung")
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 84.0
+offset_top = -209.0
+offset_right = -91.0
+offset_bottom = -27.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_nx61i")
+
+[node name="TextTyper" parent="DialogPanel" instance=ExtResource("3_occn3")]
+layout_mode = 1
+offset_left = 89.0
+offset_top = 23.0
+offset_right = -93.0
+offset_bottom = -21.0
+text = "发奶龙的小朋友,你好啊"
+typer_speed = 0.075
+char_font_assst = ExtResource("4_yoc8u")
+char_font_size = 32
+char_shadow_offset = Vector2i(1, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+process_mode = 3
+root_node = NodePath("../../..")
+libraries = {
+"": SubResource("AnimationLibrary_xif5e")
+}

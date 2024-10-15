@@ -1,20 +1,22 @@
-[gd_scene load_steps=17 format=3 uid="uid://dwhs4hyoemtk"]
+[gd_scene load_steps=26 format=3 uid="uid://dwhs4hyoemtk"]
 
-[ext_resource type="Texture2D" uid="uid://dnkxw0877x7hg" path="res://Graphics/shop_background.png" id="1_7bsho"]
+[ext_resource type="Texture2D" uid="uid://dnkxw0877x7hg" path="res://Graphics/Scenes/shop_background.png" id="1_7bsho"]
 [ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="3_406a2"]
 [ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="5_g0ryk"]
 [ext_resource type="Texture2D" uid="uid://cranl7y14bn3d" path="res://Graphics/UI/join.png" id="7_18qqm"]
 [ext_resource type="Texture2D" uid="uid://n2ytkgauhjg3" path="res://Graphics/Item/emerald.png" id="7_gba3a"]
+[ext_resource type="ArrayMesh" path="res://Graphics/Meshs/bad_omen.tres" id="8_c04cu"]
 [ext_resource type="Texture2D" uid="uid://ciyarbruv7xfo" path="res://Graphics/UI/join_highlighted.png" id="8_fpc4r"]
 [ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="8_jwn7w"]
 
 [sub_resource type="GDScript" id="GDScript_ump2o"]
 script/source = "extends Control;
 
-@onready var description_label: Label = $CanvasLayer/DescriptionLabel;
+@onready var description_label: Label = $ShopMenu/DescriptionLabel;
 @onready var value_label: Label = %ValueLabel;
-@onready var buy_button: Button = $CanvasLayer/HBoxContainer2/BuyButton;
-@onready var emerald_texture_sprite : TextureRect = $CanvasLayer/HBoxContainer2/CenterContainer/TextureRect;
+@onready var buy_button: Button = $ShopMenu/HBoxContainer2/BuyButton;
+@onready var emerald_texture_sprite : TextureRect = $ShopMenu/HBoxContainer2/CenterContainer/TextureRect;
+@onready var anim_layer: CanvasLayer = $AnimLayer;
 
 var target_item_updrade_data : UpgradeItem = null;
 var page_list : Array[Control] = [];
@@ -30,7 +32,7 @@ const SOUND_YES : Array[AudioStream] = [
 	preload(\"res://Audio/VilligerSound/Villager_yes3.ogg\")
 ];
 
-func _ready() -> void:
+func _ready() -> void : 
 	open_page(page1);
 	
 	var iron_upgrade : UpgradeItem = UpgradeItem.new(\"iron_upgrade\");
@@ -119,9 +121,25 @@ func _ready() -> void:
 	create_button(log_quick_filling, Vector2(1000, 500), page2);
 	create_button(value_upgrade, Vector2(1125, 475), page2);
 	create_button(auto_smelt, Vector2(875, 460), page2);
+	
+	if (round(Global.game_progress) >= 99 && (!Global.upgrade_list.has(\"lep\") || Global.upgrade_list[\"lep\"] == 0)) : 
+		page3 = create_page();
+		var lep_one : UpgradeItem = UpgradeItem.new(\"lep\");
+		lep_one.append(\"灾祸\", preload(\"res://Graphics/bad_omen.png\"), \\
+			8000, \"获得灾厄效果\");
+		var button : BaseButton = create_button(lep_one, Vector2(600, 490), page3);
+		lep_one.buy.connect(func() : 
+			anim_layer.start();
+	);
+
+
+
+
+
 
 
 class UpgradeItem : 
+	signal buy; # 购买时发出
 	var item_list : Array[Dictionary] = [];
 	var upgrade_count : int = 0;
 	var item_id : String = \"\";
@@ -164,8 +182,8 @@ class UpgradeItem :
 		item_button.text = item_list[upgrade_count][\"display_text\"];
 		item_button.texture = item_list[upgrade_count][\"display_texture\"];
 
-@onready var page_next_button: TextureButton = $CanvasLayer/HBoxContainer3/PageNextButton;
-@onready var page_back_button: TextureButton = $CanvasLayer/HBoxContainer3/PageBackButton;
+@onready var page_next_button: TextureButton = $ShopMenu/HBoxContainer3/PageNextButton;
+@onready var page_back_button: TextureButton = $ShopMenu/HBoxContainer3/PageBackButton;
 func open_page(id : int) : 
 	for p : Control in page_list : 
 		p.visible = false;
@@ -184,6 +202,7 @@ func open_page(id : int) :
 func create_page() -> int : 
 	var page_node : Control = Control.new();
 	page_node.mouse_filter = Control.MOUSE_FILTER_IGNORE;
+	page_node.visible = false;
 	add_child(page_node);
 	page_list.append(page_node);
 	return page_list.size() - 1;
@@ -218,10 +237,17 @@ func _on_buy_button_pressed() -> void :
 	AudioManager.play_global_audio(SOUND_YES[randi() % SOUND_YES.size()]);
 	if (target_item_updrade_data == null) : return;
 	if (target_item_updrade_data.upgrade_count < target_item_updrade_data.item_list.size()) : 
+		target_item_updrade_data.buy.emit();
 		Global.emerald_count -= target_item_updrade_data.item_list[target_item_updrade_data.upgrade_count][\"value\"];
 		target_item_updrade_data.upgrade_count += 1;
 		Global.set_upgrade(target_item_updrade_data.item_id, target_item_updrade_data.upgrade_count);
 		Global.save_game();
+		
+		var progress : float = 0.0;
+		for item : String in Global.upgrade_list : 
+			progress += 4.5 * Global.upgrade_list[item];
+		Global.game_progress = progress;
+		# 重新计算游戏进度
 	else : 
 		target_item_updrade_data.item_button.disabled = true;
 		target_item_updrade_data = null;
@@ -310,6 +336,128 @@ texture_margin_bottom = 5.0
 axis_stretch_horizontal = 1
 axis_stretch_vertical = 2
 
+[sub_resource type="GDScript" id="GDScript_f8e6h"]
+script/source = "extends CanvasLayer;
+
+@onready var mesh_instance_3d: MeshInstance3D = $SubViewportContainer/SubViewport/Model/MeshInstance3D;
+@onready var sub_viewport_container: SubViewportContainer = $SubViewportContainer;
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+
+#const BAD_OMEN_MESH = preload(\"res://Graphics/Meshs/bad_omen.tres\");
+const BAD_OMEN_SOUND = preload(\"res://Audio/Sound/Bad_omen.ogg\");
+
+func start() : 
+	sub_viewport_container.show();
+	AudioManager.play_global_audio(BAD_OMEN_SOUND);
+	animation_player.play(&\"Anim\");
+	await animation_player.animation_finished;
+	sub_viewport_container.hide();
+	SceneManager.change_scene_form_file(\"res://Scenes/Theatre/theatre_raid.tscn\");
+"
+
+[sub_resource type="Animation" id="Animation_fvg43"]
+resource_name = "Anim"
+length = 1.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Model:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.85, 1.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, -1.5708, -0.785398), Vector3(0, 0, 0), Vector3(0, -1.5708, 0.785398)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Model:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.85, 1.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0, 6.5), Vector3(0, 1.5708, 0.785398)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../../AnimationPlayer:speed_scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.633333, 0.85, 0.933333, 1.2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [1.0, 1.0, 0.001, 1.0, 1.0]
+}
+
+[sub_resource type="Animation" id="Animation_jkvc0"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Model:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, -1.5708, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Model:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("../../AnimationPlayer:speed_scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_70ws5"]
+_data = {
+"Anim": SubResource("Animation_fvg43"),
+"RESET": SubResource("Animation_jkvc0")
+}
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_7tfdv"]
+sky_curve = 1272.14
+ground_horizon_color = Color(0.681019, 0.700444, 0.731862, 1)
+
+[sub_resource type="Sky" id="Sky_d0s8o"]
+sky_material = SubResource("ProceduralSkyMaterial_7tfdv")
+
+[sub_resource type="Environment" id="Environment_br38a"]
+background_mode = 2
+sky = SubResource("Sky_d0s8o")
+adjustment_enabled = true
+adjustment_brightness = 1.3
+adjustment_contrast = 1.75
+adjustment_saturation = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ydss5"]
+vertex_color_use_as_albedo = true
+
 [node name="ShopMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -332,10 +480,10 @@ mouse_filter = 2
 texture = ExtResource("1_7bsho")
 expand_mode = 1
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="ShopMenu" type="CanvasLayer" parent="."]
 script = SubResource("GDScript_2d2tk")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="ShopMenu"]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -345,19 +493,19 @@ offset_right = -10.0
 offset_bottom = 66.0
 grow_horizontal = 0
 
-[node name="EmeraldTexture" type="TextureRect" parent="CanvasLayer/HBoxContainer"]
+[node name="EmeraldTexture" type="TextureRect" parent="ShopMenu/HBoxContainer"]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("7_gba3a")
 expand_mode = 3
 
-[node name="EmeraldCountLabel" type="Label" parent="CanvasLayer/HBoxContainer"]
+[node name="EmeraldCountLabel" type="Label" parent="ShopMenu/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
 text = "0"
 label_settings = SubResource("LabelSettings_5e4mp")
 
-[node name="DescriptionLabel" type="Label" parent="CanvasLayer"]
+[node name="DescriptionLabel" type="Label" parent="ShopMenu"]
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -370,7 +518,7 @@ grow_vertical = 0
 label_settings = SubResource("LabelSettings_hf1an")
 autowrap_mode = 1
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="ShopMenu"]
 offset_left = 328.0
 offset_top = 681.0
 offset_right = 795.0
@@ -380,7 +528,7 @@ size_flags_horizontal = 8
 theme_override_constants/separation = 0
 alignment = 2
 
-[node name="ValueLabel" type="Label" parent="CanvasLayer/HBoxContainer2"]
+[node name="ValueLabel" type="Label" parent="ShopMenu/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
@@ -389,18 +537,18 @@ label_settings = SubResource("LabelSettings_l5i6a")
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer/HBoxContainer2"]
+[node name="CenterContainer" type="CenterContainer" parent="ShopMenu/HBoxContainer2"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="TextureRect" type="TextureRect" parent="CanvasLayer/HBoxContainer2/CenterContainer"]
+[node name="TextureRect" type="TextureRect" parent="ShopMenu/HBoxContainer2/CenterContainer"]
 visible = false
 custom_minimum_size = Vector2(25, 25)
 layout_mode = 2
 texture = ExtResource("7_gba3a")
 
-[node name="BuyButton" type="Button" parent="CanvasLayer/HBoxContainer2"]
+[node name="BuyButton" type="Button" parent="ShopMenu/HBoxContainer2"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 size_flags_horizontal = 8
@@ -414,7 +562,7 @@ theme_override_styles/pressed = SubResource("StyleBoxTexture_nenss")
 theme_override_styles/normal = SubResource("StyleBoxTexture_4fv8l")
 text = "购买"
 
-[node name="ExitButton" type="TextureButton" parent="CanvasLayer"]
+[node name="ExitButton" type="TextureButton" parent="ShopMenu"]
 offset_left = 18.0
 offset_top = 15.0
 offset_right = 75.0
@@ -425,7 +573,7 @@ texture_hover = ExtResource("8_fpc4r")
 stretch_mode = 6
 flip_h = true
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="CanvasLayer"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="ShopMenu"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -435,7 +583,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="PageBackButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+[node name="PageBackButton" type="TextureButton" parent="ShopMenu/HBoxContainer3"]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_vertical = 4
@@ -445,7 +593,7 @@ texture_hover = ExtResource("8_fpc4r")
 stretch_mode = 5
 flip_h = true
 
-[node name="PageNextButton" type="TextureButton" parent="CanvasLayer/HBoxContainer3"]
+[node name="PageNextButton" type="TextureButton" parent="ShopMenu/HBoxContainer3"]
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 10
@@ -455,7 +603,51 @@ texture_pressed = ExtResource("8_fpc4r")
 texture_hover = ExtResource("8_fpc4r")
 stretch_mode = 5
 
-[connection signal="pressed" from="CanvasLayer/HBoxContainer2/BuyButton" to="." method="_on_buy_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/ExitButton" to="." method="_on_exit_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageBackButton" to="CanvasLayer" method="_on_page_back_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/HBoxContainer3/PageNextButton" to="CanvasLayer" method="_on_page_next_button_pressed"]
+[node name="AnimLayer" type="CanvasLayer" parent="."]
+script = SubResource("GDScript_f8e6h")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="AnimLayer"]
+root_node = NodePath("../SubViewportContainer/SubViewport")
+libraries = {
+"": SubResource("AnimationLibrary_70ws5")
+}
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="AnimLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="AnimLayer/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1280, 747)
+render_target_update_mode = 0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="AnimLayer/SubViewportContainer/SubViewport"]
+environment = SubResource("Environment_br38a")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="AnimLayer/SubViewportContainer/SubViewport"]
+transform = Transform3D(-0.0453631, 0.530852, -0.84625, 0, 0.847122, 0.531399, 0.998971, 0.0241059, -0.0384281, 0, 0, 0)
+sky_mode = 2
+
+[node name="Camera3D" type="Camera3D" parent="AnimLayer/SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 8.005)
+
+[node name="Model" type="Node3D" parent="AnimLayer/SubViewportContainer/SubViewport"]
+transform = Transform3D(-3.61999e-06, 0, -1, 0, 1, 0, 1, 0, -3.61999e-06, 0, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimLayer/SubViewportContainer/SubViewport/Model"]
+transform = Transform3D(-0.05, 0, -1.26759e-07, 0, 0.05, 0, 1.26759e-07, 0, -0.05, 0, 1, 0)
+material_override = SubResource("StandardMaterial3D_ydss5")
+mesh = ExtResource("8_c04cu")
+skeleton = NodePath("../..")
+
+[connection signal="pressed" from="ShopMenu/HBoxContainer2/BuyButton" to="." method="_on_buy_button_pressed"]
+[connection signal="pressed" from="ShopMenu/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="ShopMenu/HBoxContainer3/PageBackButton" to="ShopMenu" method="_on_page_back_button_pressed"]
+[connection signal="pressed" from="ShopMenu/HBoxContainer3/PageNextButton" to="ShopMenu" method="_on_page_next_button_pressed"]

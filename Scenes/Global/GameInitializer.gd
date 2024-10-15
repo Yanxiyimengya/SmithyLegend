@@ -44,6 +44,10 @@ static func init() -> void:
 	Global.item_dict["diamond"]["can_gifted"] = false;
 	# 钻石
 	
+	Global.register_item("netherite_scrap", preload("res://Graphics/Item/Netherite/netherite_scrap.png"));
+	Global.item_dict["netherite_scrap"]["can_gifted"] = false;
+	# 下界合金碎片
+	
 	## 基础材料
 	Global.register_item("copper_ingot", preload("res://Graphics/Item/copper_ingot.png"));
 	Global.item_dict["copper_ingot"]["value"] = 1;
@@ -134,6 +138,9 @@ static func init() -> void:
 	Global.item_dict["golden_boots"]["value"] = 13;
 	# 金靴子
 	
+	Global.register_item("diamond_sword", preload("res://Graphics/Item/Block/diamond_block.png"));
+	Global.item_dict["diamond_sword"]["value"] = 40;
+	# 钻石块
 	Global.register_item("diamond_sword", preload("res://Graphics/Item/Diamond/diamond_sword.png"));
 	Global.item_dict["diamond_sword"]["value"] = 20;
 	# 钻石剑
@@ -218,6 +225,8 @@ static func append_gold_recipes() :
 	# 金靴子合成配方
 
 static func append_diamond_props_recipes() : 
+	Global.register_recipe("diamond_block", ["diamond", "diamond", "diamond","diamond", "diamond", "diamond","diamond", "diamond", "diamond"], 1, true);
+	# 钻石头盔合成配方
 	Global.register_recipe("diamond_sword", ["diamond", "", "","diamond", "", "","stick", "", ""], 1, true);
 	# 钻石剑合成配方
 	Global.register_recipe("diamond_pickaxe", ["diamond", "diamond", "diamond","", "stick", "","", "stick", ""], 1, true);

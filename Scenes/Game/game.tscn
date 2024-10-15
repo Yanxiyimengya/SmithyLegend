@@ -2,14 +2,15 @@
 
 [ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/StartMenu/background_ow.png" id="1_023tj"]
 [ext_resource type="Texture2D" uid="uid://djccodq7284xy" path="res://Graphics/UI/crafetting_table.png" id="1_d0ag6"]
+[ext_resource type="Script" path="res://Scenes/Game/game.gd" id="1_ofge7"]
 [ext_resource type="PackedScene" uid="uid://c7n0juspclyhv" path="res://Scenes/Game/ItemBar/item_bar_gui.tscn" id="2_knh23"]
-[ext_resource type="Texture2D" uid="uid://nwsibve3ecjt" path="res://Graphics/bg_bottom.png" id="4_1ae1r"]
+[ext_resource type="Texture2D" uid="uid://nwsibve3ecjt" path="res://Graphics/Scenes/bg_bottom.png" id="4_1ae1r"]
 [ext_resource type="Texture2D" uid="uid://c20py6hhsmvit" path="res://Graphics/IronWorker/IronWorkerVillager.png" id="4_p5dng"]
 [ext_resource type="Texture2D" uid="uid://pe41418sdo4k" path="res://Graphics/Item/bundle_filled.png" id="5_2gwds"]
 [ext_resource type="Script" path="res://Scenes/Game/check_box.gd" id="6_60qey"]
 [ext_resource type="PackedScene" uid="uid://bfy43uxjjft4f" path="res://Scenes/Game/furnace.tscn" id="6_el30o"]
 [ext_resource type="Texture2D" uid="uid://ddsd236iqpq7p" path="res://Graphics/ParticleEffect/glint.png" id="7_mb2el"]
-[ext_resource type="Texture2D" uid="uid://dyen6hgu1oemv" path="res://Graphics/btop.png" id="9_5vbty"]
+[ext_resource type="Texture2D" uid="uid://dyen6hgu1oemv" path="res://Graphics/Scenes/bg_top.png" id="9_5vbty"]
 [ext_resource type="Texture2D" uid="uid://62nwtyoqw3ry" path="res://Graphics/BlockTexture/crafting_table_top.png" id="10_u4yik"]
 [ext_resource type="Shader" path="res://Shaders/chopping_block.gdshader" id="11_1pr1c"]
 [ext_resource type="PackedScene" uid="uid://cuf2wici1h57u" path="res://Scenes/Game/chopping_block.tscn" id="11_ejne7"]
@@ -26,144 +27,6 @@
 [ext_resource type="Texture2D" uid="uid://b1oytv4glbt28" path="res://Graphics/UI/knowlage_book_button_highlighted.png" id="21_vedkp"]
 [ext_resource type="Texture2D" uid="uid://pwhnh7r5omus" path="res://Graphics/UI/knowlage_book_button.png" id="22_5e8ul"]
 [ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="26_ejfb6"]
-
-[sub_resource type="GDScript" id="GDScript_4do7n"]
-script/source = "extends Node2D;
-@onready var game_scene: Node2D = $GameScene;
-@onready var iron_worker_soundplayer : AudioStreamPlayer = $GameScene/SmithyHouse/IronWorkerSoundPlayer;
-@onready var smithy_house : Node2D = $GameScene/SmithyHouse;
-@onready var iron_worker_villager : Sprite2D = $GameScene/SmithyHouse/Marker2D/IronWorkerVillager;
-@onready var crafting_table_canvas_layer: CanvasLayer = $CraftingTableCanvasLayer;
-@onready var item_bar: Control = $GameScene/SmithyHouse/ItemBar;
-@onready var mine_list: Node2D = $GameScene/WorkSpace/GirndstonePlantform/MineList;
-@onready var game_timer: Timer = %GameTimer;
-@onready var timeout_ui: CanvasLayer = $TimeoutUI;
-@onready var gui_layer: CanvasLayer = $GUILayer;
-
-const START_MENU_BGM = preload(\"res://Audio/MenuBGM.MP3\");
-
-var ingredient_list : Array[String] = [\"raw_copper\", \"raw_iron\"];
-var bgm_audio_task : AudioTask = null;
-var make_emerald_count : int = 0;
-
-var auto_smelt : bool = true;
-
-
-var global_list : Array[String] = [\"copper_ingot\", \"iron_ingot\"];
-func _init() -> void : 
-	if (\"iron_upgrade\" in Global.upgrade_list) : 
-		global_list.append(\"iron_sword\"); 
-		global_list.append(\"iron_shovel\"); 
-		global_list.append(\"iron_pickaxe\"); 
-		global_list.append(\"iron_hoe\");
-		global_list.append(\"iron_axe\");
-		if (Global.upgrade_list[\"iron_upgrade\"] > 1) : 
-			global_list.append(\"iron_boots\");
-			global_list.append(\"iron_leggings\");
-			global_list.append(\"iron_chestplate\");
-			global_list.append(\"iron_helmet\");
-	if (\"gold_upgrade\" in Global.upgrade_list) : 
-		global_list.append(\"gold_ingot\"); 
-		global_list.append(\"golden_sword\"); 
-		global_list.append(\"golden_shovel\"); 
-		global_list.append(\"golden_pickaxe\"); 
-		global_list.append(\"golden_hoe\");
-		global_list.append(\"golden_axe\");
-		if (Global.upgrade_list[\"gold_upgrade\"] > 1) : 
-			global_list.append(\"golden_boots\");
-			global_list.append(\"golden_leggings\");
-			global_list.append(\"golden_chestplate\");
-			global_list.append(\"golden_helmet\");
-	if (\"diamond_upgrade\" in Global.upgrade_list) : 
-		global_list.append(\"diamond_sword\"); 
-		global_list.append(\"diamond_shovel\"); 
-		global_list.append(\"diamond_pickaxe\"); 
-		global_list.append(\"diamond_hoe\");
-		global_list.append(\"diamond_axe\");
-		if (Global.upgrade_list[\"diamond_upgrade\"] > 1) : 
-			global_list.append(\"diamond_boots\");
-			global_list.append(\"diamond_leggings\");
-			global_list.append(\"diamond_chestplate\");
-			global_list.append(\"diamond_helmet\");
-	# 全局物品配方列表
-
-func _ready() -> void : 
-	item_bar.add_item_bar(\"raw_copper\", \"粗铜\");
-	item_bar.add_item_bar(\"raw_iron\", \"粗铁\");
-	if (\"gold_upgrade\" in Global.upgrade_list) : 
-		ingredient_list.append(\"raw_gold\");
-		item_bar.add_item_bar(\"raw_gold\", \"粗金\");
-	if (\"diamond_upgrade\" in Global.upgrade_list) : 
-		ingredient_list.append(\"diamond\");
-		item_bar.add_item_bar(\"diamond\", \"钻石\");
-	mine_list.create_mine();
-	auto_smelt = (\"auto_smelt\" in Global.upgrade_list);
-	
-	bgm_audio_task = AudioManager.play_suond(START_MENU_BGM);
-	bgm_audio_task.volume = -5;
-	bgm_audio_task.looping = true;
-	
-	if (Global.day >= 10) : 
-		game_timer.wait_time = 210;
-		if (Global.day >= 20) : 
-			game_timer.wait_time = 240;
-			if (Global.day >= 30) : 
-				game_timer.wait_time = 270;
-	
-	if (Global.day == 0) : 
-		game_scene.process_mode = Node.PROCESS_MODE_DISABLED;
-		await get_tree().create_timer(1).timeout;
-		smithy_house.villiger_speaking = true;
-		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/Villiger/day1_voice1.MP3\");
-		iron_worker_soundplayer.play();
-		await iron_worker_soundplayer.finished;
-		smithy_house.villiger_speaking = false;
-		
-		await get_tree().create_timer(0.25).timeout;
-		smithy_house.villiger_speaking = true;
-		iron_worker_soundplayer.stream = preload(\"res://Audio/Sound/Villiger/day1_voice2.MP3\");
-		iron_worker_soundplayer.play();
-		await iron_worker_soundplayer.finished;
-		smithy_house.villiger_speaking = false;
-		game_scene.process_mode = Node.PROCESS_MODE_INHERIT;
-	
-	game_timer.start();
-	
-
-func pause_game() : 
-	get_tree().paused = true;
-	gui_layer.process_mode = Node.PROCESS_MODE_DISABLED;
-	game_scene.process_mode = Node.PROCESS_MODE_DISABLED;
-	var tween : Tween = get_tree().create_tween();
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
-	tween.tween_property(bgm_audio_task, \"volume\", -80, 0.1);
-	await tween.finished;
-	bgm_audio_task.pause();
-
-func resume_game() : 
-	get_tree().paused = false;
-	game_scene.process_mode = Node.PROCESS_MODE_INHERIT;
-	gui_layer.process_mode = Node.PROCESS_MODE_INHERIT;
-	var tween : Tween = get_tree().create_tween();
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS);
-	tween.tween_property(bgm_audio_task, \"volume\", -5, 0.1);
-	await tween.finished;
-	bgm_audio_task.resume();
-
-func exit_game() : 
-	get_tree().paused = false;
-	SceneManager.change_scene_form_file(\"res://Scenes/StartMenus/main_menu.tscn\");
-	AudioManager.stop_all_sound();
-	DragManager.free_drag_item();
-	Global.save_game();
-
-func _on_game_timer_timeout() -> void:
-	pause_game();
-	timeout_ui.open();
-	Global.day += 1;
-	Global.emerald_count += make_emerald_count;
-	Global.game_time += game_timer.wait_time;
-"
 
 [sub_resource type="GDScript" id="GDScript_mlhnp"]
 script/source = "extends Node2D;
@@ -195,7 +58,7 @@ var max_value : int = 10;
 var character_list : Array[Node] = [null, null, null];
 const CHARACTER_LIST : Array[PackedScene] = [
 	preload(\"res://Scenes/Game/Characters/character.tscn\"),
-	preload(\"res://Scenes/Game/Characters/character._nitwit.tscn\"),
+	preload(\"res://Scenes/Game/Characters/character_nitwit.tscn\"),
 
 ];
 
@@ -336,11 +199,22 @@ func _on_check_box_gui_input(event: InputEvent) -> void :
 	if (event is InputEventMouse && event.is_pressed() && event.button_index == MOUSE_BUTTON_LEFT) : 
 		if (ironworker_upgrade) : 
 			if (!replenishmenting) : 
+				AudioManager.play_global_audio(VILLIGER_SOUND_IDLE[randi() % 3]);
+				
+				var tween : Tween = create_tween();
+				tween.tween_property(self, \"rotation_degrees\", 2.0, 0.2);
 				replenishmenting = true;
+				##
+				
 				for mine : Node in mine_list.mine_list : 
 					for i : int in range(8-mine.item_count) : 
 						replenishment(bag_export_marker.global_position, mine.global_position, Global.item_dict[mine.item_type][\"texture\"],mine);
-						await get_tree().create_timer(0.1).timeout;
+						await get_tree().create_timer(0.1, false).timeout;
+				
+				tween = create_tween();
+				tween.tween_property(self, \"rotation_degrees\", 8.0, 0.2);
+				##
+				
 				replenishmenting = false;
 			# 铁匠升级
 		else : 
@@ -1549,6 +1423,7 @@ func auto_craft(item_id: String):
 		if index > -1: 
 			if drop_obj.item_type != \"\":
 				drag_item_queue.append(drop_obj);
+				drag_itemkey_queue.remove_at(index);
 	
 	if drag_item_queue.size() < item_slot_number: 
 		var item: String = \"\"
@@ -1751,14 +1626,21 @@ shadow_color = Color(0, 0, 0, 1)
 
 [node name="Game" type="Node2D"]
 y_sort_enabled = true
-script = SubResource("GDScript_4do7n")
+script = ExtResource("1_ofge7")
 
-[node name="Background" type="Sprite2D" parent="."]
+[node name="BG" type="CanvasLayer" parent="."]
+layer = -128
+
+[node name="Background" type="TextureRect" parent="BG"]
 z_index = -10
 texture_filter = 2
-position = Vector2(705, 280)
-scale = Vector2(0.542838, 0.542838)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("1_023tj")
+expand_mode = 1
 
 [node name="GameScene" type="Node2D" parent="."]
 position = Vector2(-1, -4)

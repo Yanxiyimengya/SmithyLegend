@@ -22,6 +22,7 @@ func _ready() -> void:
 	load_game();
 	for item : String in upgrade_list : 
 		set_upgrade(item, upgrade_list[item]);
+		game_progress += 4.5 * upgrade_list[item];
 	
 
 #region 工具装备合成配方
@@ -34,7 +35,6 @@ func set_upgrade(item:  String, level : int = 0) :
 	set_update_effect(item, level);
 
 func set_update_effect(item:  String, level : int) : 
-	game_progress += 4 * level;
 	match (item) : 
 		"iron_upgrade" : 
 			if (level > 0) : GameInitializer.append_iron_props_recipes();
@@ -55,7 +55,7 @@ func set_update_effect(item:  String, level : int) :
 			if (level == 2) :
 				value_multiplier = 2.0;
 			if (level == 3) :
-				value_multiplier = 3.0;
+				value_multiplier = 3.5;
 			
 
 #endregion

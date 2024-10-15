@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bpbc6coptdnqw"]
+
+[ext_resource type="Script" path="res://Scenes/TextTyper/TextTyper.gd" id="1_nbrh3"]
+
+[node name="TextTyper" type="Container"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+script = ExtResource("1_nbrh3")
+
+[node name="VoicePlayer" type="AudioStreamPlayer" parent="."]
+
+[connection signal="call_command" from="." to="." method="_on_call_command"]

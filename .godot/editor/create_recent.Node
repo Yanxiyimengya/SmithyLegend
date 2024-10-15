@@ -1,5 +1,14 @@
+Panel
+TextureRect
+Node3D
+AnimationPlayer
+MeshInstance3D
+Camera3D
+SubViewport
+SubViewportContainer
+Control
+CanvasLayer
 TextureButton
 Node2D
 Sprite2D
-Control
 ResourcePreloader
