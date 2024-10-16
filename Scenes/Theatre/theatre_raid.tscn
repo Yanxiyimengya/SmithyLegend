@@ -67,6 +67,33 @@ shader_parameter/space = 0.04
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nx61i"]
 bg_color = Color(0, 0, 0, 0.513726)
 
+[sub_resource type="Animation" id="Animation_86cey"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0.6, 0.6)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(151, 569)]
+}
+
 [sub_resource type="Animation" id="Animation_fdkuw"]
 resource_name = "VillagerSoundAnim"
 length = 0.15
@@ -94,33 +121,6 @@ tracks/1/keys = {
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
 "values": [Vector2(151, 570), Vector2(151, 550), Vector2(151, 570)]
-}
-
-[sub_resource type="Animation" id="Animation_86cey"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(0.6, 0.6)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("@SubViewport@9101/TheatreRaid/IronWorkerVillager:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(151, 569)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_xif5e"]

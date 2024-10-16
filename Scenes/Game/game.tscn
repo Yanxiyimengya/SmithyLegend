@@ -1685,7 +1685,7 @@ scale = Vector2(2, 2)
 mouse_filter = 2
 
 [node name="SmithyR" type="Sprite2D" parent="GameScene/SmithyHouse"]
-position = Vector2(713.85, 342)
+position = Vector2(711, 342)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_1ae1r")
 region_rect = Rect2(849.149, 0, 246.781, 1335)
@@ -1742,7 +1742,8 @@ position = Vector2(113, 47)
 scale = Vector2(0.5, 0.5)
 
 [node name="GirndstonePlantform" type="Sprite2D" parent="GameScene/WorkSpace"]
-position = Vector2(1061.12, 656)
+position = Vector2(1065, 655.75)
+scale = Vector2(1.00703, 1.00703)
 texture = ExtResource("9_5vbty")
 
 [node name="MineList" type="Node2D" parent="GameScene/WorkSpace/GirndstonePlantform"]

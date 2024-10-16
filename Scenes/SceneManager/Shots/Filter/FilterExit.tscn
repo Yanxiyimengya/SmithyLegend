@@ -5,7 +5,8 @@ script/source = "extends Control
 
 signal shot_finished;
 
-func _ready() -> void:
+func _ready() -> void : 
+	$AnimationPlayer.speed_scale = SceneManager.time_scale;
 	$AnimationPlayer.play(\"default\");
 	await $AnimationPlayer.animation_finished;
 	shot_finished.emit();

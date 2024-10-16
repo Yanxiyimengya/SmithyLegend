@@ -42,7 +42,7 @@ func drag_end() :
 	for obj : CanvasItem in register_list : 
 		if (obj != null && obj.can_process()) : 
 			if (obj.has_method(CAN_DRAG_CALLBACK) && obj.callv(CAN_DRAG_CALLBACK, [obj.get_local_mouse_position(), drag_data])) : 
-				var mouse_global_position : Vector2 = get_viewport().get_mouse_position(); 
+				#ar mouse_global_position : Vector2 = get_viewport().get_mouse_position(); 
 				if (obj.has_method(DROP_DATA)) : 
 					obj.callv(DROP_DATA, [drag_data]);
 					success = true;

@@ -96,6 +96,14 @@ func save_game() :
 		file.close();
 	pass;
 
+func reset_game() : 
+	game_progress = 0;
+	emerald_count = 0;
+	day = 0;
+	upgrade_list.clear();
+	recipe_dict.clear();
+	save_game();
+
 func register_recipe(target_item: String, recipe: Array, count : int, shape: bool = false):
 	var item_recipe_list: Array = []
 	if (recipe_dict.has(target_item)) :

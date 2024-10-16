@@ -7,6 +7,7 @@ signal change_scene_finished;
 # Insert Shots
 var in_shot : PackedScene = null;
 var out_shot : PackedScene = null;
+var time_scale : float = 1.0;
 
 func change_scene_form_file(file_path : String) :
 	var shot : Node;

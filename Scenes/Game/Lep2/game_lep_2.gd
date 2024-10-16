@@ -18,7 +18,8 @@ var make_emerald_count : int = 0;
 var auto_smelt : bool = true;
 
 var global_list : Array[String] = ["copper_ingot", "iron_ingot", "stick", "plank"];
-func _init() -> void : 
+func _enter_tree() -> void : 
+	await get_tree().process_frame;
 	if ("iron_upgrade" in Global.upgrade_list) : 
 		global_list.append("iron_sword"); 
 		global_list.append("iron_shovel"); 

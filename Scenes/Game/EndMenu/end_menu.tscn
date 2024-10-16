@@ -1,0 +1,368 @@
+[gd_scene load_steps=30 format=3 uid="uid://cohlp1ypcmror"]
+
+[ext_resource type="Texture2D" uid="uid://c5nqp7g87uca8" path="res://Graphics/BlockTexture/dirt.png" id="1_k485a"]
+[ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="2_dy73a"]
+[ext_resource type="Texture2D" uid="uid://dlp437met1cdj" path="res://Graphics/UI/minecraft.png" id="2_q8p22"]
+[ext_resource type="Texture2D" uid="uid://e2caqs6r3fit" path="res://Graphics/ParticleEffect/spark.png" id="2_r56h3"]
+[ext_resource type="Texture2D" uid="uid://dn7wpewfgbinh" path="res://Graphics/Item/firework_rocket.png" id="3_kmagy"]
+[ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="4_1u8q6"]
+[ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="5_wp6cw"]
+
+[sub_resource type="GDScript" id="GDScript_fic7r"]
+script/source = "extends Control;
+@onready var emerald_count_label: Label = $CanvasLayer/VBoxContainer/EmeraldCount/Label;
+@onready var time_label_label: Label = $CanvasLayer/VBoxContainer/Time/Label;
+@onready var day_label_label: Label = $CanvasLayer/VBoxContainer/Day/Label;
+
+const MINECRAFT_DOG = preload(\"res://Audio/Minecraft_Dog.ogg\");
+
+var audio_task : AudioTask;
+var emerald_count : float = 0.0 : 
+	set(value) : 
+		emerald_count = value;
+		emerald_count_label.text = str(int(value));
+var game_time : float = 0.0 : 
+	set(value) : 
+		game_time = value;
+		
+		var second_str : String = str(int(value)%60);
+		if (second_str.length() < 2) : 
+			second_str = \"0\" + second_str;
+		time_label_label.text = str(int(value)/60) + \":\" + second_str;
+var day : float = 0.0 : 
+	set(value) : 
+		day = value;
+		day_label_label.text = str(int(value));
+
+func _ready() -> void : 
+	audio_task = AudioManager.play_suond(MINECRAFT_DOG);
+	set_value();
+
+func set_value() : 
+	var tween : Tween = create_tween();
+	tween.tween_property(self, \"emerald_count\", Global.emerald_count, 1.0);
+	tween.tween_property(self, \"game_time\", Global.game_time, 1.0);
+	tween.tween_property(self, \"day\", Global.day, 1.0);
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"main_menu\"));
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_0qex4"]
+particles_animation = true
+particles_anim_h_frames = 8
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_owarl"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.639037, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_iyw57"]
+curve = SubResource("Curve_owarl")
+
+[sub_resource type="Gradient" id="Gradient_35w4s"]
+interpolation_mode = 2
+offsets = PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+colors = PackedColorArray(1, 0, 0, 1, 1, 0.6, 0, 1, 0.8, 1, 0, 1, 0.2, 1, 0, 1, 0, 1, 0.4, 1, 0, 0.4, 1, 1, 0.2, 0, 1, 1, 0.8, 0, 1, 1, 1, 0, 0.6, 1, 1, 0, 0.0166664, 1, 1, 0, 0.0166664, 1)
+metadata/_snap_count = 9
+metadata/_snap_enabled = true
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_o0o75"]
+gradient = SubResource("Gradient_35w4s")
+
+[sub_resource type="Gradient" id="Gradient_fp86b"]
+colors = PackedColorArray(1, 1, 1, 1, 0.850051, 0.850051, 0.850051, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_ooch2"]
+gradient = SubResource("Gradient_fp86b")
+
+[sub_resource type="Curve" id="Curve_7ss5y"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.419786, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_bsxc2"]
+curve = SubResource("Curve_7ss5y")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_s8c6s"]
+lifetime_randomness = 0.25
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 320.0
+initial_velocity_max = 420.0
+gravity = Vector3(0, 200, 0)
+damping_min = 500.0
+damping_max = 500.0
+scale_min = 3.0
+scale_max = 3.0
+scale_curve = SubResource("CurveTexture_bsxc2")
+color_ramp = SubResource("GradientTexture1D_ooch2")
+color_initial_ramp = SubResource("GradientTexture1D_o0o75")
+alpha_curve = SubResource("CurveTexture_iyw57")
+anim_speed_min = 1.0
+anim_speed_max = 1.0
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_mdtn3"]
+lifetime_randomness = 0.5
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(640, 1, 1)
+direction = Vector3(0, -1, 0)
+spread = 0.0
+initial_velocity_min = 500.0
+initial_velocity_max = 500.0
+gravity = Vector3(0, 0, 0)
+scale_min = 3.0
+scale_max = 3.0
+sub_emitter_mode = 2
+sub_emitter_amount_at_end = 32
+
+[sub_resource type="Shader" id="Shader_7v32a"]
+code = "shader_type canvas_item;
+
+void vertex() {
+	// Called for every vertex the material is visible on.
+}
+
+void fragment() {
+	COLOR.a *= 1.0-UV.y;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_71l5r"]
+shader = SubResource("Shader_7v32a")
+
+[sub_resource type="Shader" id="Shader_0jpx1"]
+code = "shader_type canvas_item;
+
+void vertex() {
+	// Called for every vertex the material is visible on.
+}
+
+void fragment() {
+	COLOR.a *= UV.y;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pwwqa"]
+shader = SubResource("Shader_0jpx1")
+
+[sub_resource type="LabelSettings" id="LabelSettings_fplts"]
+font = ExtResource("2_dy73a")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lg8fh"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_w200q"]
+texture = ExtResource("4_1u8q6")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xy6b7"]
+texture = ExtResource("5_wp6cw")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qvvth"]
+texture = ExtResource("5_wp6cw")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="LabelSettings" id="LabelSettings_aly5k"]
+font = ExtResource("2_dy73a")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+
+[node name="EndMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_fic7r")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+modulate = Color(0.392325, 0.392325, 0.392325, 1)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 427.0
+offset_bottom = -495.0
+grow_vertical = 2
+scale = Vector2(3, 3)
+texture = ExtResource("1_k485a")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Spark" type="GPUParticles2D" parent="."]
+material = SubResource("CanvasItemMaterial_0qex4")
+position = Vector2(3, 0)
+emitting = false
+amount = 800
+process_material = SubResource("ParticleProcessMaterial_s8c6s")
+texture = ExtResource("2_r56h3")
+lifetime = 1.5
+one_shot = true
+
+[node name="Firework" type="GPUParticles2D" parent="."]
+position = Vector2(645, 781)
+amount = 2
+sub_emitter = NodePath("../Spark")
+process_material = SubResource("ParticleProcessMaterial_mdtn3")
+texture = ExtResource("3_kmagy")
+lifetime = 1.5
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+material = SubResource("ShaderMaterial_71l5r")
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 31.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 0.247059)
+
+[node name="ColorRect2" type="ColorRect" parent="CanvasLayer"]
+material = SubResource("ShaderMaterial_pwwqa")
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 0.247059)
+
+[node name="Minecraft" type="Sprite2D" parent="CanvasLayer"]
+position = Vector2(627, 262)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("2_q8p22")
+
+[node name="Title" type="Label" parent="CanvasLayer/Minecraft"]
+offset_left = -271.667
+offset_top = 73.3333
+offset_right = -123.667
+offset_bottom = 89.3333
+scale = Vector2(4, 4)
+text = "你是 村庄铁匠铺传奇"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -67.0
+offset_top = 11.5
+offset_right = 29.0
+offset_bottom = 75.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.5, 1.5)
+theme_override_constants/separation = 8
+
+[node name="EmeraldCount" type="HBoxContainer" parent="CanvasLayer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="CanvasLayer/VBoxContainer/EmeraldCount"]
+layout_mode = 2
+text = "持有绿宝石"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/EmeraldCount"]
+layout_mode = 2
+text = "0"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Time" type="HBoxContainer" parent="CanvasLayer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="CanvasLayer/VBoxContainer/Time"]
+layout_mode = 2
+text = "游戏时间"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/Time"]
+layout_mode = 2
+text = "0"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Day" type="HBoxContainer" parent="CanvasLayer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="CanvasLayer/VBoxContainer/Day"]
+layout_mode = 2
+text = "游戏天数"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/VBoxContainer/Day"]
+layout_mode = 2
+text = "0"
+label_settings = SubResource("LabelSettings_fplts")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ExitButton" type="Button" parent="CanvasLayer"]
+custom_minimum_size = Vector2(150, 0)
+offset_left = 397.0
+offset_top = 578.0
+offset_right = 634.0
+offset_bottom = 602.0
+scale = Vector2(2, 2)
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_dy73a")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_lg8fh")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_w200q")
+theme_override_styles/hover = SubResource("StyleBoxTexture_xy6b7")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_w200q")
+theme_override_styles/normal = SubResource("StyleBoxTexture_qvvth")
+
+[node name="Label" type="Label" parent="CanvasLayer/ExitButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -18.5
+offset_top = -5.0
+offset_right = 141.5
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "返回菜单"
+label_settings = SubResource("LabelSettings_aly5k")
+
+[connection signal="pressed" from="CanvasLayer/ExitButton" to="." method="_on_exit_button_pressed"]

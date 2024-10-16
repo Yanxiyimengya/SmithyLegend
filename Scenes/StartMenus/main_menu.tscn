@@ -1,6 +1,6 @@
-[gd_scene load_steps=24 format=3 uid="uid://bbyak2wetx75r"]
+[gd_scene load_steps=38 format=3 uid="uid://bbyak2wetx75r"]
 
-[ext_resource type="Texture2D" uid="uid://c7wff5vs2b73" path="res://Graphics/MainMenu.png" id="1_livov"]
+[ext_resource type="Texture2D" uid="uid://c7wff5vs2b73" path="res://Graphics/Scenes/MainMenu.png" id="1_livov"]
 [ext_resource type="Shader" path="res://Shaders/perspective.gdshader" id="2_ubsdj"]
 [ext_resource type="FontFile" uid="uid://c0n8s8gx2dm18" path="res://Fonts/MinecraftAECN.ttf" id="3_u6voo"]
 [ext_resource type="Texture2D" uid="uid://cranl7y14bn3d" path="res://Graphics/UI/join.png" id="4_cy1cy"]
@@ -8,6 +8,9 @@
 [ext_resource type="Texture2D" uid="uid://dichorub38tc2" path="res://Graphics/Item/gear.png" id="6_g5ikc"]
 [ext_resource type="Texture2D" uid="uid://b1g2vgtt6335o" path="res://Graphics/UI/short_button.png" id="7_gq2cy"]
 [ext_resource type="Texture2D" uid="uid://rjjal6rs815o" path="res://Graphics/UI/short_button_bottom.png" id="8_jutq1"]
+[ext_resource type="Texture2D" uid="uid://d1y5obuvlasll" path="res://Graphics/Item/Block/beacon.png" id="9_ewu0f"]
+[ext_resource type="Texture2D" uid="uid://o87nx6ar8uge" path="res://Graphics/UI/button_disabled.png" id="10_22c6s"]
+[ext_resource type="Texture2D" uid="uid://bqb6h8pgl0gb4" path="res://Graphics/UI/button.png" id="11_jfha1"]
 
 [sub_resource type="GDScript" id="GDScript_ku11u"]
 script/source = "extends Control;
@@ -24,12 +27,14 @@ func _ready() -> void:
 	emerald_count.text = str(Global.emerald_count);
 	day_count.text = str(Global.day);
 	
-	game_process_label.text = str(floor(Global.game_progress)) + \"%\";
+	game_process_label.text = str(min(floor(Global.game_progress), 100)) + \"%\";
 	
 	var second_str : String = str(Global.game_time%60);
 	if (second_str.length() < 2) : 
 		second_str = \"0\" + second_str;
 	play_time_count.text = str(Global.game_time/60) + \":\" + second_str;
+	
+		
 
 func _on_furnace_button_pressed() -> void:
 	AudioManager.play_global_audio(CLICK_SOUND);
@@ -131,6 +136,9 @@ script/source = "extends CanvasLayer;
 @onready var setting_menu: PanelContainer = $SettingMenu;
 @onready var bgm_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar;
 @onready var sound_slider_bar: HSlider = $SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar;
+@onready var restart_game_button: TextureButton = $RestartGameButton;
+@onready var animation_player: AnimationPlayer = $AnimationPlayer;
+@onready var restart_menu: CanvasLayer = $\"../RestartMenu\";
 
 var openned : bool = false;
 var openning : bool = false;
@@ -138,12 +146,18 @@ var openning : bool = false;
 func _ready() -> void:
 	bgm_slider_bar.value = Global.bgm_volume;
 	sound_slider_bar.value = Global.sound_volume;
-	bgm_slider_bar.drag_ended.connect(func(c: bool) : 
-		Global.save_game();
+	bgm_slider_bar.drag_ended.connect(func(value_changed: bool) : 
+		if (value_changed) : 
+			Global.save_game();
 	);
-	sound_slider_bar.drag_ended.connect(func(c: bool) : 
-		Global.save_game();
+	sound_slider_bar.drag_ended.connect(func(value_changed: bool) : 
+		if (value_changed) : 
+			Global.save_game();
 	);
+	
+	if (Global.upgrade_list.has(\"lep\") && Global.upgrade_list[\"lep\"] == 1) : 
+		restart_game_button.visible = true;
+		animation_player.play(&\"ButtonUpdate\");
 
 func _on_setting_button_pressed() -> void : 
 	if (!openning) : 
@@ -166,6 +180,12 @@ func _on_bgm_slider_bar_value_changed(value: float) -> void:
 func _on_sound_slider_bar_value_changed(value: float) -> void:
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(\"Sound\"),value);
 	Global.sound_volume = value;
+
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+func _on_restart_game_button_pressed() -> void:
+	restart_menu.open();
+	AudioManager.play_global_audio(CLICK_SOUND);
 "
 
 [sub_resource type="LabelSettings" id="LabelSettings_lbcpq"]
@@ -196,6 +216,120 @@ border_width_left = 1
 border_color = Color(0, 0, 0, 1)
 expand_margin_top = 3.0
 expand_margin_bottom = 3.0
+
+[sub_resource type="Animation" id="Animation_pllhy"]
+resource_name = "ButtonUpdate"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("RestartGameButton:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 0.966667),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.75, 0.75), Vector2(0.8, 0.8), Vector2(0.75, 0.75)]
+}
+
+[sub_resource type="Animation" id="Animation_nmpf1"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("RestartGameButton:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0.75, 0.75)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_uqebv"]
+_data = {
+"ButtonUpdate": SubResource("Animation_pllhy"),
+"RESET": SubResource("Animation_nmpf1")
+}
+
+[sub_resource type="GDScript" id="GDScript_bemfi"]
+script/source = "extends CanvasLayer;
+@onready var color_rect: ColorRect = $ColorRect;
+
+const CLICK_SOUND = preload(\"res://Audio/Sound/Click.ogg\");
+
+func open() : 
+	self.show();
+	color_rect.color.a = 0.0;
+	var tween : Tween = create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.35, 0.2);
+	get_tree().paused = true;
+
+func _on_confirm_button_pressed() -> void:
+	get_tree().paused = false;
+	AudioManager.play_global_audio(CLICK_SOUND);
+	Global.reset_game();
+	SceneManager.change_scene_form_packed(Global.resource_preloader.get_resource(\"start_menu\"));
+
+
+func _on_exit_button_pressed() -> void:
+	AudioManager.play_global_audio(CLICK_SOUND);
+	var tween : Tween = create_tween();
+	tween.tween_property(color_rect, \"color:a\", 0.0, 0.2);
+	get_tree().paused = false;
+	await tween.finished;
+	self.hide();
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_xghhk"]
+font = ExtResource("3_u6voo")
+font_size = 64
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(4, 4)
+
+[sub_resource type="LabelSettings" id="LabelSettings_c2lif"]
+font = ExtResource("3_u6voo")
+font_size = 32
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5mg5v"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_b38n5"]
+texture = ExtResource("10_22c6s")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pb0bt"]
+texture = ExtResource("11_jfha1")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_22gga"]
+texture = ExtResource("11_jfha1")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 2
+
+[sub_resource type="LabelSettings" id="LabelSettings_nhlw0"]
+font = ExtResource("3_u6voo")
+shadow_size = 0
+shadow_color = Color(0, 0, 0, 1)
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -426,7 +560,7 @@ theme_override_constants/margin_bottom = 5
 [node name="Label" type="Label" parent="CanvasLayer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "版本号:1.0.8
+text = "版本号:1.1.0
 作者:B站 - 烟汐忆梦_YM
 不得以盈利为目的二次分发,宣传"
 label_settings = SubResource("LabelSettings_lbcpq")
@@ -501,6 +635,136 @@ theme_override_styles/grabber_area_highlight = SubResource("StyleBoxFlat_2cwn8")
 min_value = -60.0
 max_value = 0.0
 
+[node name="RestartGameButton" type="TextureButton" parent="CanvasLayer"]
+visible = false
+offset_left = 1155.0
+offset_top = -5.0
+offset_right = 1219.0
+offset_bottom = 59.0
+scale = Vector2(0.75, 0.75)
+pivot_offset = Vector2(32, 32.2963)
+texture_normal = ExtResource("9_ewu0f")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CanvasLayer"]
+libraries = {
+"": SubResource("AnimationLibrary_uqebv")
+}
+
+[node name="RestartMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+visible = false
+script = SubResource("GDScript_bemfi")
+
+[node name="ColorRect" type="ColorRect" parent="RestartMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Label" type="Label" parent="RestartMenu"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -78.0
+offset_top = -66.5
+offset_right = 114.0
+offset_bottom = -2.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "重置游戏"
+label_settings = SubResource("LabelSettings_xghhk")
+
+[node name="Label" type="Label" parent="RestartMenu/Label"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -93.0
+offset_top = 48.0
+offset_right = 163.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.75, 0.75)
+text = "此项操作不可撤销"
+label_settings = SubResource("LabelSettings_c2lif")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="RestartMenu"]
+offset_left = 343.0
+offset_top = 546.0
+offset_right = 658.0
+offset_bottom = 567.0
+scale = Vector2(2, 2)
+theme_override_constants/separation = 15
+
+[node name="ConfirmButton" type="Button" parent="RestartMenu/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_u6voo")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_5mg5v")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_b38n5")
+theme_override_styles/hover = SubResource("StyleBoxTexture_pb0bt")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_b38n5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_22gga")
+
+[node name="Label" type="Label" parent="RestartMenu/HBoxContainer/ConfirmButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -9.0
+offset_top = -5.0
+offset_right = 151.0
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "确定"
+label_settings = SubResource("LabelSettings_nhlw0")
+
+[node name="ExitButton" type="Button" parent="RestartMenu/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_u6voo")
+theme_override_font_sizes/font_size = 16
+theme_override_styles/focus = SubResource("StyleBoxEmpty_5mg5v")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_b38n5")
+theme_override_styles/hover = SubResource("StyleBoxTexture_pb0bt")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_b38n5")
+theme_override_styles/normal = SubResource("StyleBoxTexture_22gga")
+
+[node name="Label" type="Label" parent="RestartMenu/HBoxContainer/ExitButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -9.0
+offset_top = -4.5
+offset_right = 151.0
+offset_bottom = 27.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.6, 0.6)
+text = "取消"
+label_settings = SubResource("LabelSettings_nhlw0")
+
 [connection signal="mouse_entered" from="FurnaceButton" to="." method="_on_furnace_button_mouse_entered"]
 [connection signal="mouse_exited" from="FurnaceButton" to="." method="_on_furnace_button_mouse_exited"]
 [connection signal="pressed" from="FurnaceButton" to="." method="_on_furnace_button_pressed"]
@@ -511,3 +775,6 @@ max_value = 0.0
 [connection signal="pressed" from="CanvasLayer/MarginContainer2/SettingButton" to="CanvasLayer" method="_on_setting_button_pressed"]
 [connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer/BGMSliderBar" to="CanvasLayer" method="_on_bgm_slider_bar_value_changed"]
 [connection signal="value_changed" from="CanvasLayer/SettingMenu/VBoxContainer/HBoxContainer2/SoundSliderBar" to="CanvasLayer" method="_on_sound_slider_bar_value_changed"]
+[connection signal="pressed" from="CanvasLayer/RestartGameButton" to="CanvasLayer" method="_on_restart_game_button_pressed"]
+[connection signal="pressed" from="RestartMenu/HBoxContainer/ConfirmButton" to="RestartMenu" method="_on_confirm_button_pressed"]
+[connection signal="pressed" from="RestartMenu/HBoxContainer/ExitButton" to="RestartMenu" method="_on_exit_button_pressed"]
