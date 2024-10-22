@@ -1,4 +1,4 @@
-[gd_scene load_steps=139 format=3 uid="uid://3cfrpxyldmeo"]
+[gd_scene load_steps=145 format=3 uid="uid://3cfrpxyldmeo"]
 
 [ext_resource type="Texture2D" uid="uid://dd5iektgt1ybs" path="res://Graphics/StartMenu/background_ow.png" id="1_023tj"]
 [ext_resource type="Texture2D" uid="uid://djccodq7284xy" path="res://Graphics/UI/crafetting_table.png" id="1_d0ag6"]
@@ -504,7 +504,19 @@ func get_area() -> Area3D :
 	return result;
 "
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ik3wn"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_sjkha"]
+sky_material = SubResource("ProceduralSkyMaterial_ik3wn")
+
+[sub_resource type="Environment" id="Environment_ma1js"]
+background_mode = 2
+sky = SubResource("Sky_sjkha")
+
 [sub_resource type="World3D" id="World3D_rq8vb"]
+environment = SubResource("Environment_ma1js")
 
 [sub_resource type="GDScript" id="GDScript_h01k2"]
 script/source = "extends Node;
@@ -615,7 +627,19 @@ func _on_chopping_block_destoried() -> void:
 		particle_sprite.visible = false;
 "
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_7hnjk"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_qf1l2"]
+sky_material = SubResource("ProceduralSkyMaterial_7hnjk")
+
+[sub_resource type="Environment" id="Environment_gpltm"]
+background_mode = 2
+sky = SubResource("Sky_qf1l2")
+
 [sub_resource type="World3D" id="World3D_pr1ub"]
+environment = SubResource("Environment_gpltm")
 
 [sub_resource type="Curve" id="Curve_afwo6"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.366397, 0), 0.0, 0.0, 0, 0]

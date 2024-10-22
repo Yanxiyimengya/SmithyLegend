@@ -120,19 +120,6 @@ func _on_timer_timeout() -> void:
 	can_hit = true;
 "
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_askkj"]
-sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-
-[sub_resource type="Sky" id="Sky_jo5bs"]
-sky_material = SubResource("ProceduralSkyMaterial_askkj")
-
-[sub_resource type="Environment" id="Environment_81h6v"]
-background_mode = 2
-sky = SubResource("Sky_jo5bs")
-tonemap_mode = 2
-glow_enabled = true
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6o3rd"]
 albedo_texture = ExtResource("1_cukuh")
 uv1_scale = Vector3(1, 0.5, 1)
@@ -334,16 +321,19 @@ _data = {
 "Shake": SubResource("Animation_4k5pj")
 }
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_7hnjk"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_qf1l2"]
+sky_material = SubResource("ProceduralSkyMaterial_7hnjk")
+
+[sub_resource type="Environment" id="Environment_gpltm"]
+background_mode = 2
+sky = SubResource("Sky_qf1l2")
+
 [node name="ChoppingBlock" type="Node3D"]
 script = SubResource("GDScript_37wtk")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.866023, -0.433016, 0.250001, 2.98023e-08, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -5.96046e-08, 0, 0)
-light_color = Color(0.7481, 0.7481, 0.7481, 1)
-shadow_enabled = true
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_81h6v")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(-0.0436194, -0.422216, 0.905445, 0, 0.906308, 0.422618, -0.999049, 0.0184344, -0.0395326, 2.022, 1.55, 0)
@@ -410,5 +400,12 @@ libraries = {
 
 [node name="Timer" type="Timer" parent="."]
 one_shot = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_gpltm")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.668968, -0.189967, 0.718606, -0.190896, 0.890451, 0.413104, -0.71836, -0.413532, 0.559419, -0.0116143, 0.0513868, -0.0211329)
+light_color = Color(0.853488, 0.853488, 0.853488, 1)
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

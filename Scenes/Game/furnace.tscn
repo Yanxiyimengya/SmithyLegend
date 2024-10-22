@@ -40,12 +40,12 @@ func play_anim(anim : StringName) :
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
 ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
 
-[sub_resource type="Sky" id="Sky_qf1l2"]
+[sub_resource type="Sky" id="Sky_sjkha"]
 sky_material = SubResource("ProceduralSkyMaterial_ik3wn")
 
 [sub_resource type="Environment" id="Environment_ma1js"]
 background_mode = 2
-sky = SubResource("Sky_qf1l2")
+sky = SubResource("Sky_sjkha")
 
 [sub_resource type="Animation" id="Animation_pab2w"]
 length = 0.001

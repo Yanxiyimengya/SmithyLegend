@@ -1,7 +1,3 @@
 res://Scenes/Game/game.tscn
 res://Shaders/gama.gdshader
 res://Shaders/texture_mix.gdshader
-res://Scenes/Game/EndMenu/end_menu.tscn
-res://Scenes/StartMenus/shop_menu.tscn
-res://Scenes/StartMenus/main_menu.tscn
-res://Scenes/DragManager/DragManager.gd
